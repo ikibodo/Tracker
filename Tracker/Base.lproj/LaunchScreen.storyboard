@@ -23,7 +23,7 @@
                             </imageView>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
-                        <color key="backgroundColor" name="Blue"/>
+                        <color key="backgroundColor" name="Tr Blue"/>
                         <color key="tintColor" red="1" green="1" blue="1" alpha="1" colorSpace="calibratedRGB"/>
                         <constraints>
                             <constraint firstItem="Xzw-Tk-gbB" firstAttribute="centerX" secondItem="Ze5-6b-2t3" secondAttribute="centerX" id="NbQ-GD-ekp"/>
@@ -38,7 +38,7 @@
     </scenes>
     <resources>
         <image name="Logo" width="91" height="94"/>
-        <namedColor name="Blue">
+        <namedColor name="Tr Blue">
             <color red="0.21568627450980393" green="0.44705882352941179" blue="0.90588235294117647" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
         </namedColor>
     </resources>

@@ -19,7 +19,11 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 //        guard let _ = (scene as? UIWindowScene) else { return }
         guard let windowScene = (scene as? UIWindowScene) else { return }
         window = UIWindow(windowScene: windowScene)
-        window?.rootViewController = TrackerViewController()
+//        let trackerViewController = TrackerViewController()
+//        let navigationController = UINavigationController(rootViewController: trackerViewController)
+        window?.rootViewController = TabBarViewController()
+//        window?.rootViewController = navigationController
+//        window?.rootViewController = TrackerViewController()
         window?.makeKeyAndVisible()
     }
 
