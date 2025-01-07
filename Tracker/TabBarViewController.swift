@@ -18,7 +18,7 @@ final class TabBarViewController: UITabBarController {
         tabBar.layer.borderWidth = 1
         tabBar.layer.borderColor = UIColor.ypGray.cgColor
         
-        let trackerViewController = TrackerViewController()
+        let trackerViewController = TrackersViewController()
         let trackerTabBarItem = UITabBarItem(
             title: "Трекеры",
             image: UIImage(named: "Disc"),
@@ -26,11 +26,17 @@ final class TabBarViewController: UITabBarController {
         trackerViewController.tabBarItem = trackerTabBarItem
         
         let statisticsViewController = StatisticsViewController()
-        let statisticsTabBarIte = UIViewController()
-        statisticsViewController.tabBarItem = UITabBarItem(
+        let statisticsTabBarItem = UITabBarItem(
             title: "Статистика",
             image: UIImage(named: "Rabbit"),
             tag: 1)
+        statisticsViewController.tabBarItem = statisticsTabBarItem
+        
+//        let statisticsTabBarItem = UIViewController()
+//        statisticsViewController.tabBarItem = UITabBarItem(
+//            title: "Статистика",
+//            image: UIImage(named: "Rabbit"),
+//            tag: 1)
         
         self.viewControllers = [trackerViewController, statisticsViewController]
     }

@@ -6,7 +6,10 @@
 //
 import UIKit
 
-final class TrackerViewController: UIViewController {
+final class TrackersViewController: UIViewController {
+    
+    var categories: [TrackerCategory] = []
+    var completedTrackers: [TrackerRecord] = []
     
     private lazy var plusButton: UIButton = {
         let plusButton = UIButton(type: .custom)
@@ -110,7 +113,6 @@ final class TrackerViewController: UIViewController {
             errorLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
             datePicker.heightAnchor.constraint(equalToConstant: 34),
             datePicker.widthAnchor.constraint(equalToConstant: 77),
-//            datePicker.topAnchor.constraint(equalTo: view.topAnchor, constant: 49),
             datePicker.centerYAnchor.constraint(equalTo: plusButton.centerYAnchor),
             datePicker.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16)
         ])
@@ -119,7 +121,11 @@ final class TrackerViewController: UIViewController {
     
     @objc
     private func didTapPlusButton() {
-        // TODO - обработать нажатие на кнопку
+        let viewController = TrackerTypeViewController()
+        let navigationController = UINavigationController(rootViewController: viewController)
+        navigationController.modalPresentationStyle = .pageSheet
+        
+        present(navigationController, animated: true)
     }
     
     @objc private func didChangeDate(_ sender: UIDatePicker) {
