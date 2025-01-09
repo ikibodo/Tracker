@@ -144,11 +144,13 @@ final class IrregularEventController : UIViewController {
     @objc
     private func categoryButtonTapped () {
         // TODO
+        print("Категория нажата") // удалить
     }
     
     @objc
     private func createButtonTapped() {
         // TODO
+        print("Создать нажато") // удалить
     }
     
     @objc

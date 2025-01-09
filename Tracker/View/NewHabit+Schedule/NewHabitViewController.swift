@@ -79,13 +79,19 @@ final class NewHabitViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .ypWhite
+        
         trackerItems.reloadData()
         trackerItems.delegate = self
         trackerItems.dataSource = self
         navigationBar()
         addSubViews()
         addConstraints()
+        
+        let swipeDownGesture = UISwipeGestureRecognizer(target: self, action: #selector(handleSwipeDown))
+        swipeDownGesture.direction = .down
+        view.addGestureRecognizer(swipeDownGesture)
     }
+    
     private func navigationBar() {
         guard let navigationBar = navigationController?.navigationBar else { return }
         navigationBar.topItem?.titleView = titleLabel
@@ -128,11 +134,17 @@ final class NewHabitViewController: UIViewController {
     @objc
     private func createButtonTapped() {
         // TODO
+        print("Создать нажато") // удалить
+
     }
     
     @objc
     private func cancelButtonTapped() {
         dismiss(animated: true, completion: nil)
+    }
+    
+    @objc func handleSwipeDown() {
+        self.dismiss(animated: true, completion: nil)
     }
 }
 
@@ -143,7 +155,8 @@ extension NewHabitViewController: UITableViewDataSource{
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         if indexPath.row == 0 {
-            print("Категория нажата")
+            // TODO
+            print("Категория нажата") // удалить
         } else if indexPath.row == 1 {
             let viewController = ScheduleViewController()
             let navigationController = UINavigationController(rootViewController: viewController)
