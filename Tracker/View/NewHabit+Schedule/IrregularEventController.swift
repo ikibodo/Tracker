@@ -6,7 +6,7 @@
 //
 import UIKit
 
-final class IrregularEventController : UIViewController {
+final class IrregularEventController : UIViewController, UITextFieldDelegate {
     weak var trackerViewController: TrackerTypeViewController?
     
     private lazy var titleLabel: UILabel = {
@@ -29,6 +29,7 @@ final class IrregularEventController : UIViewController {
         textField.leftView = UIView(frame: CGRect(x: 0, y: 0, width: 8, height: 0))
         textField.leftViewMode = .always
         textField.clipsToBounds = true
+        textField.delegate = self
         textField.translatesAutoresizingMaskIntoConstraints = false
         return textField
     }()
@@ -140,6 +141,15 @@ final class IrregularEventController : UIViewController {
             cancelButton.heightAnchor.constraint(equalToConstant: 60),
         ])
     }
+    
+    func textFieldDidBeginEditing(_ textField: UITextField) {
+            print("Пользователь начал редактировать поле")
+        }
+    
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+            textField.resignFirstResponder()
+            return true
+        }
     
     @objc
     private func categoryButtonTapped () {

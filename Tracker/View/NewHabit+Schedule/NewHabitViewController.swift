@@ -6,9 +6,14 @@
 //
 import UIKit
 
-final class NewHabitViewController: UIViewController {
+protocol NewHabitViewControllerDelegate: AnyObject {
+    func addTracker(_ tracker: Tracker, to category: TrackerCategory)
+}
+
+final class NewHabitViewController: UIViewController, UITextFieldDelegate {
     
     weak var trackerViewController: TrackerTypeViewController?
+    weak var delegate: NewHabitViewControllerDelegate?
     
     private let items = ["Категория", "Расписание"]
     
@@ -32,6 +37,7 @@ final class NewHabitViewController: UIViewController {
         textField.borderStyle = .roundedRect
         textField.layer.cornerRadius = 16
         textField.clipsToBounds = true
+        textField.delegate = self
         textField.translatesAutoresizingMaskIntoConstraints = false
         return textField
     }()
@@ -131,11 +137,30 @@ final class NewHabitViewController: UIViewController {
         ])
     }
     
+    func textFieldDidBeginEditing(_ textField: UITextField) {
+            print("Пользователь начал редактировать поле")
+        }
+    
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+            textField.resignFirstResponder()
+            return true
+        }
+    
     @objc
     private func createButtonTapped() {
-        // TODO
-        print("Создать нажато") // удалить
-
+            let newTracker = Tracker(
+                id: UUID(),
+                title: trackerNameInput.text ?? "",
+                color: .colorSelected17,
+                emoji: "🌟",
+                schedule: Set<WeekDay>()
+            )
+        let category = TrackerCategory(
+                    title: self.title ?? "Домашний уют",
+                    trackers: [newTracker])
+        delegate?.addTracker(newTracker, to: category)
+        dismiss(animated: true, completion: nil)
+        print("Создать нажато и создается трекер")
     }
     
     @objc
@@ -156,7 +181,7 @@ extension NewHabitViewController: UITableViewDataSource{
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         if indexPath.row == 0 {
             // TODO
-            print("Категория нажата") // удалить
+            print("Категория нажата")
         } else if indexPath.row == 1 {
             let viewController = ScheduleViewController()
             let navigationController = UINavigationController(rootViewController: viewController)

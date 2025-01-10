@@ -7,13 +7,16 @@
 import Foundation
 import UIKit
 
-protocol TrackerCellDelegate: AnyObject {
-    func completeTracker(id: UUID, at indexPath: IndexPath)
-}
+//protocol TrackerCellDelegate: AnyObject {
+//    func completeTracker(id: UUID, at indexPath: IndexPath)
+//}
 
 final class TrackerCell: UICollectionViewCell {
     
-    weak var delegate: TrackerCellDelegate?
+//    weak var delegate: TrackerCellDelegate?
+    var tracker: Tracker? // Связанный трекер
+    var onButtonTapped: (() -> Void)? // Коллбэк нажатия
+    
     
     private var onAdd: ((Date) -> Void)?
     private var currentDate: Date?
@@ -155,8 +158,25 @@ final class TrackerCell: UICollectionViewCell {
             self.currentDate = date
             self.onAdd = onAdd
         }
+//    func configure(with tracker: Tracker, isCompleted: Bool) {
+//        self.tracker = tracker
+//        if isPlusState {
+//            actionButton.setImage(UIImage(named: "Plus"), for: .normal)
+//            actionButton.tintColor = .colorSelected18
+//            actionButton.backgroundColor = .ypWhite
+//            actionButton.alpha = 1
+//        } else {
+//            actionButton.setImage(UIImage(named: "Done"), for: .normal)
+//            actionButton.tintColor = .ypWhite
+//            actionButton.backgroundColor = .colorSelected18
+//            actionButton.alpha = 0.3
+//        }
+//        isPlusState.toggle()
+//        if let date = currentDate { onAdd?(date) }
+//    }
 
     @objc private func buttonTapped() {
+        onButtonTapped?()
         if isPlusState {
             actionButton.setImage(UIImage(named: "Plus"), for: .normal)
             actionButton.tintColor = .colorSelected18
@@ -170,6 +190,5 @@ final class TrackerCell: UICollectionViewCell {
         }
         isPlusState.toggle()
         if let date = currentDate { onAdd?(date) }
-
     }
 }
