@@ -34,3 +34,11 @@ extension UIColor {
     static var colorSelected17: UIColor { UIColor(named: "Color selection 17") ?? UIColor.purple }
     static var colorSelected18: UIColor { UIColor(named: "Color selection 18") ?? UIColor.green }
 }
+
+extension Data {
+    var dateformat: DateFormatter {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "dd-MM-yy"
+        return formatter
+    }
+}

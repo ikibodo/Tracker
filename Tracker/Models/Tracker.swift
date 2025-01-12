@@ -13,7 +13,7 @@ struct Tracker {
     let color: UIColor
     let emoji: String
     let schedule: [WeekDay?]
-    
+}
 //    init(id: UUID = UUID(),
 //             title: String,
 //             color: UIColor,
@@ -25,4 +25,4 @@ struct Tracker {
 //            self.emoji = emoji.isEmpty ? "❤️" : emoji
 //            self.schedule = schedule
 //        }
-}
+

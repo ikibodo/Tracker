@@ -32,7 +32,7 @@ final class TrackerCell: UICollectionViewCell {
         return view
     }()
     
-    let  titleLabel: UILabel = {
+    var  titleLabel: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 12, weight: .medium)
         label.textColor = .ypWhite
@@ -56,16 +56,16 @@ final class TrackerCell: UICollectionViewCell {
         let label = UILabel()
         label.font = .systemFont(ofSize: 16, weight: .medium)
         label.textAlignment = .center
-//        label.text = "❤️"
+        //        label.text = "❤️"
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
     
-    private lazy var dayNumberView: UILabel = {
+    var dayNumberView: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 12, weight: .medium)
         label.textColor = .ypBlack
-        label.text = "\(countDays) дней"
+//        label.text = "\(countDays) дней"
         label.textAlignment = .center
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
@@ -90,6 +90,7 @@ final class TrackerCell: UICollectionViewCell {
     }
     
     required init?(coder: NSCoder) {
+        super.init(coder: coder)
         fatalError("init(coder:) has not been implemented")
     }
     
@@ -146,10 +147,17 @@ final class TrackerCell: UICollectionViewCell {
             actionButton.heightAnchor.constraint(equalToConstant: 34)
         ])
     }
-    func configure(with title: String, date: Date, onAdd: @escaping (Date) -> Void) {
+//    func configure(with title: String, date: Date, onAdd: @escaping (Date) -> Void) {
+//        titleLabel.text = title
+//        self.currentDate = date
+//        self.onAdd = onAdd
+//    }
+    func configure(with title: String, date: Date, countDays: Int, onAdd: @escaping (Date) -> Void) {
         titleLabel.text = title
         self.currentDate = date
         self.onAdd = onAdd
+        self.countDays = countDays
+        dayNumberView.text = "\(countDays) дней"  // Обновляем label с количеством дней
     }
     
     private func plusButtonView() {
