@@ -7,33 +7,15 @@
 import Foundation
 import UIKit
 
-//protocol TrackerCellDelegate: AnyObject {
-//    func completeTracker(id: UUID, at indexPath: IndexPath)
-//}
-
 final class TrackerCell: UICollectionViewCell {
     
-//    weak var delegate: TrackerCellDelegate?
-    var tracker: Tracker? // Связанный трекер
-    var onButtonTapped: (() -> Void)? // Коллбэк нажатия
-    
+    var currentDate: Date?
+    var trackerId: UUID?
     
     private var onAdd: ((Date) -> Void)?
-    private var currentDate: Date?
-    private var id: UUID?
     private var indexPath: IndexPath?
     private var countDays: Int = 0
     private var isPlusState = false
-    
-    let  titleLabel: UILabel = {
-        let label = UILabel()
-        label.font = .systemFont(ofSize: 12, weight: .medium)
-        label.textColor = .ypWhite
-        label.textAlignment = .left
-        label.numberOfLines = 2
-        label.translatesAutoresizingMaskIntoConstraints = false
-        return label
-    }()
     
     private lazy var  topContainerView: UIView = {
         let view = UIView()
@@ -50,6 +32,16 @@ final class TrackerCell: UICollectionViewCell {
         return view
     }()
     
+    let  titleLabel: UILabel = {
+        let label = UILabel()
+        label.font = .systemFont(ofSize: 12, weight: .medium)
+        label.textColor = .ypWhite
+        label.textAlignment = .left
+        label.numberOfLines = 2
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+    
     private lazy var emojiView: UIView = {
         let view = UIView()
         view.backgroundColor = .ypWhite.withAlphaComponent(0.3)
@@ -60,11 +52,11 @@ final class TrackerCell: UICollectionViewCell {
         return view
     }()
     
-    private lazy var emoji: UILabel = {
+    var emoji: UILabel = {
         let label = UILabel()
         label.font = .systemFont(ofSize: 16, weight: .medium)
         label.textAlignment = .center
-        label.text = "❤️"
+//        label.text = "❤️"
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
@@ -106,7 +98,7 @@ final class TrackerCell: UICollectionViewCell {
         emoji.text = tracker.emoji
         titleLabel.text = tracker.title
         dayNumberView.text = tracker.title
-        self.id = tracker.id
+        self.trackerId = tracker.id
     }
     
     private func addSubview() {
@@ -141,8 +133,9 @@ final class TrackerCell: UICollectionViewCell {
             emoji.centerXAnchor.constraint(equalTo: emojiView.centerXAnchor),
             emoji.centerYAnchor.constraint(equalTo: emojiView.centerYAnchor),
             
-            titleLabel.topAnchor.constraint(equalTo: emojiView.bottomAnchor, constant: 8),
-            titleLabel.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
+            titleLabel.leadingAnchor.constraint(equalTo: topContainerView.leadingAnchor, constant: 12),
+            titleLabel.trailingAnchor.constraint(equalTo: topContainerView.trailingAnchor, constant: -12),
+            titleLabel.bottomAnchor.constraint(equalTo: topContainerView.bottomAnchor, constant: -12),
             
             dayNumberView.topAnchor.constraint(equalTo: bottomContainerView.topAnchor, constant: 16),
             dayNumberView.leadingAnchor.constraint(equalTo: bottomContainerView.leadingAnchor, constant: 12),
@@ -154,39 +147,30 @@ final class TrackerCell: UICollectionViewCell {
         ])
     }
     func configure(with title: String, date: Date, onAdd: @escaping (Date) -> Void) {
-            titleLabel.text = title
-            self.currentDate = date
-            self.onAdd = onAdd
-        }
-//    func configure(with tracker: Tracker, isCompleted: Bool) {
-//        self.tracker = tracker
-//        if isPlusState {
-//            actionButton.setImage(UIImage(named: "Plus"), for: .normal)
-//            actionButton.tintColor = .colorSelected18
-//            actionButton.backgroundColor = .ypWhite
-//            actionButton.alpha = 1
-//        } else {
-//            actionButton.setImage(UIImage(named: "Done"), for: .normal)
-//            actionButton.tintColor = .ypWhite
-//            actionButton.backgroundColor = .colorSelected18
-//            actionButton.alpha = 0.3
-//        }
-//        isPlusState.toggle()
-//        if let date = currentDate { onAdd?(date) }
-//    }
-
+        titleLabel.text = title
+        self.currentDate = date
+        self.onAdd = onAdd
+    }
+    
+    private func plusButtonView() {
+        actionButton.setImage(UIImage(named: "Plus"), for: .normal)
+        actionButton.tintColor = .colorSelected18
+        actionButton.backgroundColor = .ypWhite
+        actionButton.alpha = 1
+    }
+    
+    private func doneButtonView() {
+        actionButton.setImage(UIImage(named: "Done"), for: .normal)
+        actionButton.tintColor = .ypWhite
+        actionButton.backgroundColor = .colorSelected18
+        actionButton.alpha = 0.3
+    }
+    
     @objc private func buttonTapped() {
-        onButtonTapped?()
         if isPlusState {
-            actionButton.setImage(UIImage(named: "Plus"), for: .normal)
-            actionButton.tintColor = .colorSelected18
-            actionButton.backgroundColor = .ypWhite
-            actionButton.alpha = 1
+            plusButtonView()
         } else {
-            actionButton.setImage(UIImage(named: "Done"), for: .normal)
-            actionButton.tintColor = .ypWhite
-            actionButton.backgroundColor = .colorSelected18
-            actionButton.alpha = 0.3
+            doneButtonView()
         }
         isPlusState.toggle()
         if let date = currentDate { onAdd?(date) }

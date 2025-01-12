@@ -6,16 +6,21 @@
 //
 import UIKit
 
-protocol NewHabitViewControllerDelegate: AnyObject {
+protocol NewHabitOrEventViewControllerDelegate: AnyObject {
     func addTracker(_ tracker: Tracker, to category: TrackerCategory)
 }
 
-final class NewHabitViewController: UIViewController, UITextFieldDelegate {
+final class NewHabitOrEventViewController: UIViewController, UITextFieldDelegate, ScheduleViewControllerDelegate {
     
     weak var trackerViewController: TrackerTypeViewController?
-    weak var delegate: NewHabitViewControllerDelegate?
+    weak var delegate: NewHabitOrEventViewControllerDelegate?
     
-    private let items = ["Категория", "Расписание"]
+    private var schedule: [WeekDay?] = []
+    private let itemsForHabits = ["Категория", "Расписание"]
+    private let itemsForEvents = ["Категория"]
+    private var currentItems: [String] = []
+    var categories: [TrackerCategory] = []
+    var viewCategories: [TrackerCategory] = []
     
     private lazy var titleLabel: UILabel = {
         let label = UILabel()
@@ -82,6 +87,19 @@ final class NewHabitViewController: UIViewController, UITextFieldDelegate {
         return button
     }()
     
+    init(isForHabits: Bool) {
+        self.currentItems = isForHabits ? itemsForHabits : itemsForEvents
+        super.init(nibName: nil, bundle: nil)
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    // Добавляем собственный инициализатор, если вы создаете объект программно
+    init() {
+        super.init(nibName: nil, bundle: nil)
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .ypWhite
@@ -92,10 +110,6 @@ final class NewHabitViewController: UIViewController, UITextFieldDelegate {
         navigationBar()
         addSubViews()
         addConstraints()
-        
-        let swipeDownGesture = UISwipeGestureRecognizer(target: self, action: #selector(handleSwipeDown))
-        swipeDownGesture.direction = .down
-        view.addGestureRecognizer(swipeDownGesture)
     }
     
     private func navigationBar() {
@@ -123,7 +137,8 @@ final class NewHabitViewController: UIViewController, UITextFieldDelegate {
             trackerItems.topAnchor.constraint(equalTo: trackerNameInput.bottomAnchor, constant: 24),
             trackerItems.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
             trackerItems.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
-            trackerItems.heightAnchor.constraint(equalToConstant: 150),
+//            trackerItems.heightAnchor.constraint(equalToConstant: 150),
+            trackerItems.heightAnchor.constraint(equalToConstant: CGFloat(75 * currentItems.count)),
             
             createButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -16),
             createButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
@@ -138,27 +153,46 @@ final class NewHabitViewController: UIViewController, UITextFieldDelegate {
     }
     
     func textFieldDidBeginEditing(_ textField: UITextField) {
-            print("Пользователь начал редактировать поле")
-        }
+        print("Пользователь начал редактировать поле")
+    }
     
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
-            textField.resignFirstResponder()
-            return true
+        textField.resignFirstResponder()
+        return true
+    }
+    
+    func didUpdateSchedule(_ schedule: [WeekDay?]) {
+        self.schedule = schedule
+        print("Updated schedule: \(schedule.map { $0?.rawValue ?? "None" })")
+    }
+    
+    private func addNewTracker(_ tracker: Tracker, to categoryTitle: String) {
+        if let existingCategoryIndex = viewCategories.firstIndex(where: { $0.title == categoryTitle }) {
+            var updatedCategory = viewCategories[existingCategoryIndex]
+            var newTrackers = updatedCategory.trackers
+            newTrackers.append(tracker)
+            updatedCategory = TrackerCategory(title: updatedCategory.title, trackers: newTrackers)
+            viewCategories[existingCategoryIndex] = updatedCategory
+            delegate?.addTracker(tracker, to: updatedCategory)
+        } else {
+            let defaultCategory = TrackerCategory(title: "Домашний уют", trackers: [tracker])
+            viewCategories.append(defaultCategory)
+            delegate?.addTracker(tracker, to: defaultCategory)
         }
+    }
     
     @objc
     private func createButtonTapped() {
-            let newTracker = Tracker(
-                id: UUID(),
-                title: trackerNameInput.text ?? "",
-                color: .colorSelected17,
-                emoji: "🌟",
-                schedule: Set<WeekDay>()
-            )
-        let category = TrackerCategory(
-                    title: self.title ?? "Домашний уют",
-                    trackers: [newTracker])
-        delegate?.addTracker(newTracker, to: category)
+        let newTracker = Tracker(
+            id: UUID(),
+            title: trackerNameInput.text ?? "Без названия",
+            color: .colorSelected17,
+            emoji: "❤️", //"🌟"
+            schedule: self.schedule
+        )
+        let categoryTitle = self.title ?? "Default"
+        
+        addNewTracker(newTracker, to: categoryTitle)
         dismiss(animated: true, completion: nil)
         print("Создать нажато и создается трекер")
     }
@@ -167,41 +201,44 @@ final class NewHabitViewController: UIViewController, UITextFieldDelegate {
     private func cancelButtonTapped() {
         dismiss(animated: true, completion: nil)
     }
-    
-    @objc func handleSwipeDown() {
-        self.dismiss(animated: true, completion: nil)
-    }
 }
 
-extension NewHabitViewController: UITableViewDataSource{
+extension NewHabitOrEventViewController: UITableViewDataSource{
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         return 75
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        if indexPath.row == 0 {
-            // TODO
+        switch indexPath.row {
+        case 0:
             print("Категория нажата")
-        } else if indexPath.row == 1 {
-            let viewController = ScheduleViewController()
-            let navigationController = UINavigationController(rootViewController: viewController)
+            // TODO - добавить логику для выбора категории
+        case 1:
+            print("Расписание нажато")
+            let scheduleViewController = ScheduleViewController()
+            scheduleViewController.delegate = self
+            scheduleViewController.loadSelectedSchedule(from: schedule)
+            let navigationController = UINavigationController(rootViewController: scheduleViewController)
             navigationController.modalPresentationStyle = .pageSheet
-            
             present(navigationController, animated: true)
+        default:
+            break
         }
     }
 }
 
-extension NewHabitViewController: UITableViewDelegate{
+extension NewHabitOrEventViewController: UITableViewDelegate{
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return items.count
+//        return items.count
+        return currentItems.count
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath)
         cell.selectionStyle = .none
         cell.backgroundColor = .ypLightGray.withAlphaComponent(0.3)
-        cell.textLabel?.text = items[indexPath.row]
+//        cell.textLabel?.text = items[indexPath.row]
+        cell.textLabel?.text = currentItems[indexPath.row]
         cell.textLabel?.font = UIFont.systemFont(ofSize: 17)
         cell.textLabel?.textColor = .ypBlack
         
@@ -215,8 +252,7 @@ extension NewHabitViewController: UITableViewDelegate{
             cell.accessoryView = chevronImageView
         }
         cell.accessoryType = .disclosureIndicator
-        
-        cell.textLabel?.text = items[indexPath.row]
+//        cell.textLabel?.text = items[indexPath.row]
         return cell
     }
 }

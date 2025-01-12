@@ -9,6 +9,7 @@ import UIKit
 final class TrackerTypeViewController: UIViewController {
     
     weak var trackerViewController: TrackersViewController?
+    weak var delegate: NewHabitOrEventViewControllerDelegate?
     
     private lazy var titleLabel: UILabel = {
         let label = UILabel()
@@ -52,7 +53,12 @@ final class TrackerTypeViewController: UIViewController {
         navigationBar()
         addSubViews()
         addConstraints()
+        
+        let swipeDownGesture = UISwipeGestureRecognizer(target: self, action: #selector(handleSwipeDown))
+        swipeDownGesture.direction = .down
+        view.addGestureRecognizer(swipeDownGesture)
     }
+    
     private func navigationBar() {
         guard let navigationBar = navigationController?.navigationBar else { return }
         navigationBar.topItem?.titleView = titleLabel
@@ -81,19 +87,51 @@ final class TrackerTypeViewController: UIViewController {
         ])
     }
     
+//    @objc private func habitsButtonTapped() {
+//        let viewController = NewHabitOrEventViewController()
+//        viewController.delegate = delegate
+//        let navigationController = UINavigationController(rootViewController: viewController)
+//        navigationController.modalPresentationStyle = .pageSheet
+//        
+//        present(navigationController, animated: true)
+//    }
+//    
+//    @objc private func eventsButtonTapped() {
+//        let viewController = IrregularEventController()
+//        let navigationController = UINavigationController(rootViewController: viewController)
+//        navigationController.modalPresentationStyle = .pageSheet
+//        
+//        present(navigationController, animated: true)
+//    }
+
+
+//        @objc private func habitsButtonTapped() {
+//            let newHabitVC = NewHabitOrEventViewController(isForHabits: true)
+//            navigationController?.pushViewController(newHabitVC, animated: true)
+//        }
+//
+//        @objc private func eventsButtonTapped() {
+//            let newHabitVC = NewHabitOrEventViewController(isForHabits: false)
+//            navigationController?.pushViewController(newHabitVC, animated: true)
+//        }
     @objc private func habitsButtonTapped() {
-        let viewController = NewHabitViewController()
-        let navigationController = UINavigationController(rootViewController: viewController)
+        let newHabitVC = NewHabitOrEventViewController(isForHabits: true)
+        newHabitVC.delegate = delegate // Передаем делегат
+        let navigationController = UINavigationController(rootViewController: newHabitVC)
         navigationController.modalPresentationStyle = .pageSheet
-        
-        present(navigationController, animated: true)
+        present(navigationController, animated: true) // Модальное представление
     }
-    
+
     @objc private func eventsButtonTapped() {
-        let viewController = IrregularEventController()
-        let navigationController = UINavigationController(rootViewController: viewController)
+        let newEventVC = NewHabitOrEventViewController(isForHabits: false)
+        newEventVC.delegate = delegate // Передаем делегат
+        let navigationController = UINavigationController(rootViewController: newEventVC)
         navigationController.modalPresentationStyle = .pageSheet
-        
-        present(navigationController, animated: true)
+        present(navigationController, animated: true) // Модальное представление
+    }
+
+    
+    @objc func handleSwipeDown() {
+        self.dismiss(animated: true, completion: nil)
     }
 }

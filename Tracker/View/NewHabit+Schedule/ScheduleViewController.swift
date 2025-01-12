@@ -6,11 +6,16 @@
 //
 import UIKit
 
+protocol ScheduleViewControllerDelegate: AnyObject {
+    func didUpdateSchedule(_ schedule: [WeekDay?])
+}
+
 final class ScheduleViewController: UIViewController {
     
-    weak var newHabitViewController: NewHabitViewController?
+    weak var newHabitOrEventViewController: NewHabitOrEventViewController?
+    weak var delegate: ScheduleViewControllerDelegate?
     
-    private var selectedDays: Set<WeekDay> = []
+    private var schedule: [WeekDay?] = []
     
     private lazy var titleLabel: UILabel = {
         let label = UILabel()
@@ -59,6 +64,11 @@ final class ScheduleViewController: UIViewController {
         addSubview()
         addConstraints()
     }
+    // Загрузка выбранных дней (если они были переданы через делегат)
+    func loadSelectedSchedule(from schedule: [WeekDay?]) {
+        self.schedule = schedule
+    }
+    
     private func navigationBar() {
         guard let navigationBar = navigationController?.navigationBar else { return }
         navigationBar.topItem?.titleView = titleLabel
@@ -86,22 +96,26 @@ final class ScheduleViewController: UIViewController {
         ])
     }
     
-    @objc
-    private func switchChanged(_ sender: UISwitch) {
+    @objc private func switchChanged(_ sender: UISwitch) {
         let index = sender.tag
         let weekDay = WeekDay.allCases[index]
         
         if sender.isOn {
-            selectedDays.insert(weekDay)
+            if !schedule.contains(where: { $0 == weekDay }) {
+                schedule.append(weekDay)  // Добавляем день в расписание
+            }
         } else {
-            selectedDays.remove(weekDay)
+            if let indexToRemove = schedule.firstIndex(of: weekDay) {
+                schedule[indexToRemove] = nil  // Убираем день из расписания
+            }
         }
-        print("Selected days: \(selectedDays.map { $0.rawValue })")
+        
+        print("Selected schedule: \(schedule.map { $0?.rawValue ?? "None" })")
     }
     
     @objc
     private func saveDays () {
-        // TODO - сохранение дней реализовать
+        delegate?.didUpdateSchedule(schedule)
         dismiss(animated: true, completion: nil)
     }
 }
@@ -125,7 +139,7 @@ extension ScheduleViewController: UITableViewDataSource {
         }
         
         let switchControl = UISwitch()
-        switchControl.isOn = selectedDays.contains(weekDay)
+        switchControl.isOn = schedule.contains(weekDay)
         switchControl.tag = indexPath.row
         switchControl.addTarget(self, action: #selector(switchChanged(_:)), for: .valueChanged)
         cell.accessoryView = switchControl
