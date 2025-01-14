@@ -14,8 +14,7 @@ enum WeekDay: String, CaseIterable {
     case friday = "Пятница"
     case saturday = "Суббота"
     case sunday = "Воскресенье"
-    
-    // Метод для получения WeekDay по индексу (1 - Понедельник, 7 - Воскресенье)
+
     static func from(weekdayIndex: Int) -> WeekDay? {
         switch weekdayIndex {
         case 1: return .sunday

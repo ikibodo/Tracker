@@ -8,19 +8,17 @@ import Foundation
 import UIKit
 
 final class TrackerCell: UICollectionViewCell {
-    
+    var onButtonTapped: ((_ isPlusState: Bool) -> Void)?
+
     var currentDate: Date?
     var trackerId: UUID?
     
-    private var onAdd: ((Date) -> Void)?
     private var indexPath: IndexPath?
-    private var countDays: Int = 0
     private var isPlusState = false
     
-    private lazy var  topContainerView: UIView = {
+    var  topContainerView: UIView = {
         let view = UIView()
         view.layer.cornerRadius = 16
-        view.backgroundColor = .colorSelected18
         view.translatesAutoresizingMaskIntoConstraints = false
         return view
     }()
@@ -56,7 +54,6 @@ final class TrackerCell: UICollectionViewCell {
         let label = UILabel()
         label.font = .systemFont(ofSize: 16, weight: .medium)
         label.textAlignment = .center
-        //        label.text = "❤️"
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
@@ -65,17 +62,15 @@ final class TrackerCell: UICollectionViewCell {
         let label = UILabel()
         label.font = .systemFont(ofSize: 12, weight: .medium)
         label.textColor = .ypBlack
-//        label.text = "\(countDays) дней"
         label.textAlignment = .center
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
     
-    private lazy var  actionButton: UIButton = {
+    var  actionButton: UIButton = {
         let button = UIButton()
         button.layer.cornerRadius = 34 / 2
         button.setImage(UIImage(named: "Plus"), for: .normal)
-        button.tintColor = .colorSelected18
         button.alpha = 1
         button.layer.masksToBounds = true
         button.translatesAutoresizingMaskIntoConstraints = false
@@ -94,11 +89,11 @@ final class TrackerCell: UICollectionViewCell {
         fatalError("init(coder:) has not been implemented")
     }
     
-    func setupCell(with tracker: Tracker, indexPath: IndexPath) { // TODO доделать
+    func setupCell(with tracker: Tracker, indexPath: IndexPath) { // TODO 
         emojiView.setNeedsDisplay()
         emoji.text = tracker.emoji
-        titleLabel.text = tracker.title
-        dayNumberView.text = tracker.title
+        titleLabel.text = tracker.name
+        dayNumberView.text = tracker.name
         self.trackerId = tracker.id
     }
     
@@ -147,40 +142,14 @@ final class TrackerCell: UICollectionViewCell {
             actionButton.heightAnchor.constraint(equalToConstant: 34)
         ])
     }
-//    func configure(with title: String, date: Date, onAdd: @escaping (Date) -> Void) {
-//        titleLabel.text = title
-//        self.currentDate = date
-//        self.onAdd = onAdd
-//    }
-    func configure(with title: String, date: Date, countDays: Int, onAdd: @escaping (Date) -> Void) {
+    
+    func configure(with title: String, date: Date, countDays: Int) {
         titleLabel.text = title
         self.currentDate = date
-        self.onAdd = onAdd
-        self.countDays = countDays
-        dayNumberView.text = "\(countDays) дней"  // Обновляем label с количеством дней
-    }
-    
-    private func plusButtonView() {
-        actionButton.setImage(UIImage(named: "Plus"), for: .normal)
-        actionButton.tintColor = .colorSelected18
-        actionButton.backgroundColor = .ypWhite
-        actionButton.alpha = 1
-    }
-    
-    private func doneButtonView() {
-        actionButton.setImage(UIImage(named: "Done"), for: .normal)
-        actionButton.tintColor = .ypWhite
-        actionButton.backgroundColor = .colorSelected18
-        actionButton.alpha = 0.3
     }
     
     @objc private func buttonTapped() {
-        if isPlusState {
-            plusButtonView()
-        } else {
-            doneButtonView()
+            onButtonTapped?(isPlusState)
+            isPlusState.toggle()
         }
-        isPlusState.toggle()
-        if let date = currentDate { onAdd?(date) }
-    }
 }

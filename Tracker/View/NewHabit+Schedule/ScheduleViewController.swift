@@ -64,7 +64,7 @@ final class ScheduleViewController: UIViewController {
         addSubview()
         addConstraints()
     }
-    // Загрузка выбранных дней (если они были переданы через делегат)
+
     func loadSelectedSchedule(from schedule: [WeekDay?]) {
         self.schedule = schedule
     }
@@ -102,11 +102,11 @@ final class ScheduleViewController: UIViewController {
         
         if sender.isOn {
             if !schedule.contains(where: { $0 == weekDay }) {
-                schedule.append(weekDay)  // Добавляем день в расписание
+                schedule.append(weekDay)
             }
         } else {
             if let indexToRemove = schedule.firstIndex(of: weekDay) {
-                schedule[indexToRemove] = nil  // Убираем день из расписания
+                schedule[indexToRemove] = nil
             }
         }
         

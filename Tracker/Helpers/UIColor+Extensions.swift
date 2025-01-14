@@ -15,6 +15,7 @@ extension UIColor {
     static var ypRed: UIColor { UIColor(named: "Tr Red") ?? UIColor.red }
     static var ypGray: UIColor { UIColor(named: "Tr Gray") ?? UIColor.gray }
     static var ypLightGray: UIColor { UIColor(named: "Tr Light Gray") ?? UIColor.lightGray }
+    static var colorSelected0: UIColor { UIColor(named: "Color datePickLabel") ?? UIColor.lightGray }
     static var colorSelected1: UIColor { UIColor(named: "Color selection 1") ?? UIColor.red}
     static var colorSelected2: UIColor { UIColor(named: "Color selection 2") ?? UIColor.orange }
     static var colorSelected3: UIColor { UIColor(named: "Color selection 3") ?? UIColor.blue }
@@ -33,12 +34,4 @@ extension UIColor {
     static var colorSelected16: UIColor { UIColor(named: "Color selection 16") ?? UIColor.purple }
     static var colorSelected17: UIColor { UIColor(named: "Color selection 17") ?? UIColor.purple }
     static var colorSelected18: UIColor { UIColor(named: "Color selection 18") ?? UIColor.green }
-}
-
-extension Data {
-    var dateformat: DateFormatter {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "dd-MM-yy"
-        return formatter
-    }
 }

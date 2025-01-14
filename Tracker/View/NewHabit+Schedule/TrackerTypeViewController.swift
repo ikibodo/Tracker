@@ -87,47 +87,20 @@ final class TrackerTypeViewController: UIViewController {
         ])
     }
     
-    //    @objc private func habitsButtonTapped() {
-    //        let viewController = NewHabitOrEventViewController()
-    //        viewController.delegate = delegate
-    //        let navigationController = UINavigationController(rootViewController: viewController)
-    //        navigationController.modalPresentationStyle = .pageSheet
-    //        
-    //        present(navigationController, animated: true)
-    //    }
-    //    
-    //    @objc private func eventsButtonTapped() {
-    //        let viewController = IrregularEventController()
-    //        let navigationController = UINavigationController(rootViewController: viewController)
-    //        navigationController.modalPresentationStyle = .pageSheet
-    //        
-    //        present(navigationController, animated: true)
-    //    }
-    
-    
-    //        @objc private func habitsButtonTapped() {
-    //            let newHabitVC = NewHabitOrEventViewController(isForHabits: true)
-    //            navigationController?.pushViewController(newHabitVC, animated: true)
-    //        }
-    //
-    //        @objc private func eventsButtonTapped() {
-    //            let newHabitVC = NewHabitOrEventViewController(isForHabits: false)
-    //            navigationController?.pushViewController(newHabitVC, animated: true)
-    //        }
     @objc private func habitsButtonTapped() {
         let newHabitVC = NewHabitOrEventViewController(isForHabits: true)
-        newHabitVC.delegate = delegate // Передаем делегат
+        newHabitVC.delegate = delegate
         let navigationController = UINavigationController(rootViewController: newHabitVC)
         navigationController.modalPresentationStyle = .pageSheet
-        present(navigationController, animated: true) // Модальное представление
+        present(navigationController, animated: true)
     }
     
     @objc private func eventsButtonTapped() {
         let newEventVC = NewHabitOrEventViewController(isForHabits: false)
-        newEventVC.delegate = delegate // Передаем делегат
+        newEventVC.delegate = delegate
         let navigationController = UINavigationController(rootViewController: newEventVC)
         navigationController.modalPresentationStyle = .pageSheet
-        present(navigationController, animated: true) // Модальное представление
+        present(navigationController, animated: true)
     }
     
     
