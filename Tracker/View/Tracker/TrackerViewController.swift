@@ -5,7 +5,7 @@
 //  Created by N L on 26.12.24..
 //
 import UIKit
-// точка для начала изменений, дальше не откатывай там просто порядок наводила в коде - изменения после помощи Дрюшки \\ перенесла var countDays в контролер и убрала замыкание onAdd? \\ почистила код от лишних коммитов!!!!! \\ name for trackers вместо title  \\моки добавлены// отрисовка кнопок сделана через замыкания в TVC  \\ начало работы с фильтром
+
 final class TrackersViewController: UIViewController, NewHabitOrEventViewControllerDelegate {
     
     private var newHabitOrEventViewController: NewHabitOrEventViewController!
@@ -209,8 +209,8 @@ final class TrackersViewController: UIViewController, NewHabitOrEventViewControl
     }
     
     private func showContentOrPlaceholder() {
-                if categories.isEmpty {
-//        if trackers.isEmpty {
+        if categories.isEmpty {
+            //        if trackers.isEmpty {
             collectionView.isHidden = true
             errorImage.isHidden = false
             errorLabel.isHidden = false
@@ -269,11 +269,6 @@ final class TrackersViewController: UIViewController, NewHabitOrEventViewControl
         let calendar = Calendar.current
         let selectedDayIndex = calendar.component(.weekday, from: datePicker.date)
         guard let selectedWeekDay = WeekDay.from(weekdayIndex: selectedDayIndex) else { return }
-//        let filteredTrackers = trackers.filter { tracker in
-//            tracker.schedule.contains { weekDay in
-//                weekDay == selectedWeekDay
-//            }
-//        }
         let filteredTrackers = categories.flatMap { category in
             category.trackers.filter { tracker in
                 tracker.schedule.contains { weekDay in
@@ -349,13 +344,13 @@ extension TrackersViewController: UICollectionViewDelegate, UICollectionViewData
     
     private func handlePlusAction(for indexPath: IndexPath) {
         print("Отметка о выполнении снята у трекера \(indexPath)")
-            // TODO
-        }
-
-        private func handleDoneAction(for indexPath: IndexPath) {
-            print("Выполненным отмечен трекер \(indexPath)")
-            // TODO
-        }
+        // TODO
+    }
+    
+    private func handleDoneAction(for indexPath: IndexPath) {
+        print("Выполненным отмечен трекер \(indexPath)")
+        // TODO
+    }
 }
 
 extension TrackersViewController: UICollectionViewDelegateFlowLayout {

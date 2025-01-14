@@ -10,11 +10,12 @@ protocol NewHabitOrEventViewControllerDelegate: AnyObject {
     func addTracker(_ tracker: Tracker, to category: TrackerCategory)
 }
 
-final class NewHabitOrEventViewController: UIViewController, UITextFieldDelegate, ScheduleViewControllerDelegate {
+final class NewHabitOrEventViewController: UIViewController, ScheduleViewControllerDelegate {
     
     weak var trackerViewController: TrackerTypeViewController?
     weak var delegate: NewHabitOrEventViewControllerDelegate?
     
+    private var trackerItemsTopConstraint: NSLayoutConstraint!
     private var schedule: [WeekDay?] = []
     private let itemsForHabits = ["Категория", "Расписание"]
     private let itemsForEvents = ["Категория"]
@@ -45,6 +46,17 @@ final class NewHabitOrEventViewController: UIViewController, UITextFieldDelegate
         textField.delegate = self
         textField.translatesAutoresizingMaskIntoConstraints = false
         return textField
+    }()
+    
+    private lazy var limitLabel: UILabel = {
+        let label = UILabel()
+        label.textColor = .ypRed
+        label.font = .systemFont(ofSize: 17, weight: .regular)
+        label.textAlignment = .center
+        label.text = "Ограничение 38 символов"
+        label.isHidden = true
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
     }()
     
     private lazy var trackerItems: UITableView = {
@@ -120,13 +132,15 @@ final class NewHabitOrEventViewController: UIViewController, UITextFieldDelegate
     
     private func addSubViews() {
         view.addSubview(titleLabel)
+        view.addSubview(trackerNameInput)
+        view.addSubview(limitLabel)
+        view.addSubview(trackerItems)
         view.addSubview(createButton)
         view.addSubview(cancelButton)
-        view.addSubview(trackerNameInput)
-        view.addSubview(trackerItems)
     }
     
     private func addConstraints() {
+        trackerItemsTopConstraint = trackerItems.topAnchor.constraint(equalTo: trackerNameInput.bottomAnchor, constant: 24)
         NSLayoutConstraint.activate([
             titleLabel.centerYAnchor.constraint(equalTo: view.centerYAnchor),
             
@@ -135,7 +149,12 @@ final class NewHabitOrEventViewController: UIViewController, UITextFieldDelegate
             trackerNameInput.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
             trackerNameInput.heightAnchor.constraint(equalToConstant: 75),
             
-            trackerItems.topAnchor.constraint(equalTo: trackerNameInput.bottomAnchor, constant: 24),
+            limitLabel.topAnchor.constraint(equalTo: trackerNameInput.bottomAnchor, constant: 8),
+            limitLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
+            limitLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
+            limitLabel.heightAnchor.constraint(equalToConstant: 22),
+            
+            trackerItemsTopConstraint,
             trackerItems.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
             trackerItems.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
             trackerItems.heightAnchor.constraint(equalToConstant: CGFloat(75 * currentItems.count)),
@@ -152,29 +171,28 @@ final class NewHabitOrEventViewController: UIViewController, UITextFieldDelegate
         ])
     }
     
-    func textFieldDidBeginEditing(_ textField: UITextField) {
-        print("Пользователь начал редактировать поле")
-    }
-    
-    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
-        textField.resignFirstResponder()
-        return true
+    private func updateConstraints() {
+        if limitLabel.isHidden {
+            trackerItemsTopConstraint.isActive = false
+            trackerItemsTopConstraint = trackerItems.topAnchor.constraint(equalTo: trackerNameInput.bottomAnchor, constant: 24)
+        } else {
+            trackerItemsTopConstraint.isActive = false
+            trackerItemsTopConstraint = trackerItems.topAnchor.constraint(equalTo: limitLabel.bottomAnchor, constant: 32)
+        }
+        trackerItemsTopConstraint.isActive = true
+        
+        UIView.animate(withDuration: 0.2) {
+            self.view.layoutIfNeeded()
+        }
     }
     
     private func validateCreateButtonState() {
-        
         let isForHabits = currentItems.contains("Расписание")
-        
         let isNameFilled = !(trackerNameInput.text?.trimmingCharacters(in: .whitespaces).isEmpty ?? true)
         let isScheduleSelected = !schedule.isEmpty
         
         createButton.isEnabled = isForHabits ? (isNameFilled && isScheduleSelected) : isNameFilled
-        
         createButton.backgroundColor = createButton.isEnabled ? .ypBlack : .ypGray
-    }
-    
-    func textFieldDidChangeSelection(_ textField: UITextField) {
-        validateCreateButtonState()
     }
     
     func didUpdateSchedule(_ schedule: [WeekDay?]) {
@@ -217,6 +235,34 @@ final class NewHabitOrEventViewController: UIViewController, UITextFieldDelegate
     @objc
     private func cancelButtonTapped() {
         dismiss(animated: true, completion: nil)
+    }
+}
+
+extension NewHabitOrEventViewController: UITextFieldDelegate {
+    func textFieldDidBeginEditing(_ textField: UITextField) {
+        print("Пользователь начал редактировать поле")
+    }
+    
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        textField.resignFirstResponder()
+        return true
+    }
+    
+    func textFieldDidChangeSelection(_ textField: UITextField) {
+        validateCreateButtonState()
+    }
+    
+    func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
+        let currentText = (textField.text ?? "") as NSString
+        let updatedText = currentText.replacingCharacters(in: range, with: string)
+        
+        if updatedText.count >= 38 {
+            limitLabel.isHidden = false
+        } else {
+            limitLabel.isHidden = true
+        }
+        updateConstraints()
+        return true
     }
 }
 
