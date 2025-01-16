@@ -5,7 +5,7 @@
 //  Created by N L on 14.1.25..
 //
 import Foundation
-
+//
 final class MockData {
     static var mockData: [TrackerCategory] = [
         TrackerCategory(
@@ -15,7 +15,7 @@ final class MockData {
                         name: "Поливать растения",
                         color: .colorSelected18,
                         emoji: "❤️",
-                        schedule: [.sunday]),
+                        schedule: [.monday]),
             ]),
         TrackerCategory(
             title: "Радостные мелочи",
@@ -26,7 +26,7 @@ final class MockData {
                         emoji: "😻",
                         schedule: [.monday, .tuesday,.wednesday,]),
                 Tracker(id: UUID(),
-                        name: "Бабушка прислала открытку в вотсапе",
+                        name: "Бабушка прислала открытку в ватсапе",
                         color: .colorSelected1,
                         emoji: "🌺",
                         schedule: [.saturday, .sunday]),
@@ -43,12 +43,12 @@ final class MockData {
                         name: "Хорошее настроение",
                         color: .colorSelected16,
                         emoji: "🙂",
-                        schedule: [.sunday]),
+                        schedule: [.tuesday, .sunday]),
                 Tracker(id: UUID(),
                         name: "Легкая тревожность",
                         color: .colorSelected8,
                         emoji: "😪",
-                        schedule: [.sunday]),
+                        schedule: [.wednesday, .sunday]),
             ]),
     ]
 }

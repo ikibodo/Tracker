@@ -61,7 +61,6 @@ final class NewHabitOrEventViewController: UIViewController, ScheduleViewControl
     
     private lazy var trackerItems: UITableView = {
         let tableView = UITableView()
-        tableView.register(UITableViewCell.self, forCellReuseIdentifier: "cell")
         tableView.layer.cornerRadius = 16
         tableView.layer.maskedCorners = [.layerMaxXMaxYCorner, .layerMaxXMinYCorner, .layerMinXMaxYCorner, .layerMinXMinYCorner]
         tableView.clipsToBounds = true
@@ -198,6 +197,7 @@ final class NewHabitOrEventViewController: UIViewController, ScheduleViewControl
     func didUpdateSchedule(_ schedule: [WeekDay?]) {
         self.schedule = schedule
         validateCreateButtonState()
+        trackerItems.reloadData()
         print("Обновленное расписание \(schedule.map { $0?.rawValue ?? "None" })")
     }
     
@@ -210,7 +210,7 @@ final class NewHabitOrEventViewController: UIViewController, ScheduleViewControl
             viewCategories[existingCategoryIndex] = updatedCategory
             delegate?.addTracker(tracker, to: updatedCategory)
         } else {
-            let defaultCategory = TrackerCategory(title: "Домашний уют", trackers: [tracker])
+            let defaultCategory = TrackerCategory(title: "Мои трекеры", trackers: [tracker])
             viewCategories.append(defaultCategory)
             delegate?.addTracker(tracker, to: defaultCategory)
         }
@@ -220,12 +220,12 @@ final class NewHabitOrEventViewController: UIViewController, ScheduleViewControl
     private func createButtonTapped() {
         let newTracker = Tracker(
             id: UUID(),
-            name: trackerNameInput.text ?? "Сделай это!",
+            name: trackerNameInput.text ?? "Привычка",
             color: .colorSelected17,
             emoji: "🌟",
             schedule: self.schedule
         )
-        let categoryTitle = self.title ?? "Default"
+        let categoryTitle = self.title ?? "Мои трекеры"
         
         addNewTracker(newTracker, to: categoryTitle)
         dismiss(animated: true, completion: nil)
@@ -296,17 +296,22 @@ extension NewHabitOrEventViewController: UITableViewDelegate{
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath)
+        let cell = tableView.dequeueReusableCell(withIdentifier: "cell") ?? UITableViewCell(style: .subtitle, reuseIdentifier: "cell")
         cell.selectionStyle = .none
         cell.backgroundColor = .ypLightGray.withAlphaComponent(0.3)
         cell.textLabel?.text = currentItems[indexPath.row]
         cell.textLabel?.font = UIFont.systemFont(ofSize: 17)
         cell.textLabel?.textColor = .ypBlack
         
-        if indexPath.row == 1 {
+        if indexPath.row == 1, currentItems.contains("Расписание") {
+            let shortWeekDays = schedule.compactMap { $0?.shortWeekDay }
+            print("Краткие дни недели: \(shortWeekDays)")
+            cell.detailTextLabel?.text = shortWeekDays.isEmpty ? "" : shortWeekDays.joined(separator: ", ")
+            cell.detailTextLabel?.text = shortWeekDays.joined(separator: ", ")
+            cell.detailTextLabel?.textColor = .ypGray
+            cell.detailTextLabel?.font = UIFont.systemFont(ofSize: 17)
             cell.separatorInset = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: .greatestFiniteMagnitude)
         }
-        
         let chevronImage = UIImage(named: "Chevron")
         if let chevronImage = chevronImage {
             let chevronImageView = UIImageView(image: chevronImage)
