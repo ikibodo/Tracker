@@ -97,6 +97,7 @@ final class TrackersViewController: UIViewController, NewHabitOrEventViewControl
         datePicker.preferredDatePickerStyle = .compact
         datePicker.datePickerMode = .date
         datePicker.locale = Locale(identifier: "ru_RU")
+//        datePicker.maximumDate = Date() // Второй вариант с ограничением дат, интуитивно понятнее пользователю, но мне меньше нравится, чем реализованный, хотя в том что есть алерта явно не хватает
         datePicker.translatesAutoresizingMaskIntoConstraints = false
         datePicker.addTarget(self, action: #selector(dateChanged), for: .valueChanged)
         return datePicker
@@ -147,8 +148,10 @@ final class TrackersViewController: UIViewController, NewHabitOrEventViewControl
     }
     
     private func reloadData() {
-        categories = MockData.mockData // mockData убрать в следующих спринтах
+//        categories = MockData.mockData // mockData убрать в следующих спринтах
+        print("Загруженные категории: \(categories)")
         dateChanged()
+        print("Видимые категории: \(visibleCategories)")
     }
     
     private func addSubViews() {
@@ -276,12 +279,17 @@ final class TrackersViewController: UIViewController, NewHabitOrEventViewControl
         
         visibleCategories = categories.compactMap { category in
             let trackers = category.trackers.filter { tracker in
+                print("Проверка трекера: \(tracker.name)")
                 if tracker.schedule.isEmpty {
+                    print("Трекер без расписания: \(tracker.name)")
                     return true
                 } else {
-                    return tracker.schedule.contains { weekDay in
+//                    return tracker.schedule.contains { weekDay in
+                    let containsWeekDay = tracker.schedule.contains { weekDay in
                         weekDay == selectedWeekDay
                     }
+                    print("Трекер содержит \(selectedWeekDay): \(containsWeekDay)")
+                    return containsWeekDay
                 }
             }
             if trackers.isEmpty { return nil }
@@ -290,8 +298,8 @@ final class TrackersViewController: UIViewController, NewHabitOrEventViewControl
                 trackers: trackers
             )
         }
-        
         if visibleCategories.isEmpty {
+            print("Видимые категории: \(visibleCategories)")
             showErrorImage(true)
         } else {
             showErrorImage(false)
@@ -316,11 +324,11 @@ extension TrackersViewController: UITextFieldDelegate {
 
 extension TrackersViewController: UICollectionViewDelegate, UICollectionViewDataSource {
     func numberOfSections(in collectionView: UICollectionView) -> Int {
+        print("Количество секций: \(visibleCategories.count)")
         return visibleCategories.count
     }
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        //        return trackers.count
         guard section < visibleCategories.count else {
             return 0
         }
@@ -333,41 +341,51 @@ extension TrackersViewController: UICollectionViewDelegate, UICollectionViewData
         
         let tracker = visibleCategories[indexPath.section].trackers[indexPath.row]
         print("Секция: \(indexPath.section), Элемент: \(indexPath.row)")
-        cell.contentView.backgroundColor = .ypWhite
-        cell.topContainerView.backgroundColor = tracker.color
-        cell.actionButton.tintColor = tracker.color
-        cell.emoji.text = tracker.emoji
-        cell.titleLabel.text = tracker.name
-        cell.onButtonTapped = { [weak self] isPlusState in
-            if isPlusState {
-                cell.actionButton.setImage(UIImage(named: "Plus"), for: .normal)
-                cell.actionButton.tintColor = tracker.color
-                cell.actionButton.backgroundColor = .ypWhite
-                cell.actionButton.alpha = 1
-                self?.handlePlusAction(for: indexPath)
-            } else {
-                cell.actionButton.setImage(UIImage(named: "Done"), for: .normal)
-                cell.actionButton.tintColor = .ypWhite
-                cell.actionButton.backgroundColor = tracker.color
-                cell.actionButton.alpha = 0.3
-                self?.handleDoneAction(for: indexPath)
-            }
-        }
+        
+        let isCompletedToday = isTrackerCompletedToday(id: tracker.id)
+        cell.delegate = self
         
         let currentDate = datePicker.date
-        cell.dayNumberView.text = "\(countDays) дней"
-        cell.configure(with: tracker.name, date: currentDate, countDays: countDays)
+        let completedDay = completedTrackers.filter{ $0.id == tracker.id }.count
+        cell.configure(with: tracker.name, date: currentDate)
+        cell.setupCell(with: tracker, indexPath: indexPath, completedDay: completedDay, isCompletedToday: isCompletedToday)
+        print("Создана ячейка для секции \(indexPath.section), элемента \(indexPath.row), с трекером \(tracker.name)")
         return cell
     }
-    
-    private func handlePlusAction(for indexPath: IndexPath) {
-        print("Отметка о выполнении снята у трекера \(indexPath)")
-        // TODO
+
+    private func isTrackerCompletedToday(id: UUID) -> Bool {
+        completedTrackers.contains { trackerRecord in
+            isSameTrackerRecord(trackerRecord: trackerRecord, id: id)
+        }
     }
     
-    private func handleDoneAction(for indexPath: IndexPath) {
-        print("Выполненным отмечен трекер \(indexPath)")
-        // TODO
+    private func isSameTrackerRecord(trackerRecord: TrackerRecord, id: UUID) -> Bool {
+        let isSomeDay = Calendar.current.isDate(trackerRecord.date, inSameDayAs: datePicker.date)
+        return trackerRecord.id == id && isSomeDay
+    }
+}
+
+extension TrackersViewController: TrackerCellDelegate {
+    func completeTracker(id: UUID, at indexPath: IndexPath) {
+        let currentDate = Date()
+
+            guard datePicker.date <= currentDate else {
+                print("Ошибка: нельзя отметить трекер для будущей даты \(datePicker.date)")
+                return
+            }
+        
+        let trackerRecord = TrackerRecord(id: id, date: datePicker.date)
+        print("Выполнен трекер с id \(id) о чем создана запись \(trackerRecord.date)")
+        completedTrackers.append(trackerRecord)
+        collectionView.reloadItems(at: [indexPath])
+    }
+    
+    func uncompleteTracker(id: UUID, at indexPath: IndexPath) {
+        completedTrackers.removeAll() { trackerRecord in
+            isSameTrackerRecord(trackerRecord: trackerRecord, id: id)
+        }
+        print("Отмена выполнения трекера с id \(id) - запись о нем удалена")
+        collectionView.reloadItems(at: [indexPath])
     }
 }
 

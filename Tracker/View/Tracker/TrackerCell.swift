@@ -7,14 +7,23 @@
 import Foundation
 import UIKit
 
-final class TrackerCell: UICollectionViewCell {
-    var onButtonTapped: ((_ isPlusState: Bool) -> Void)?
+protocol TrackerCellDelegate: AnyObject {
+    func completeTracker(id: UUID, at indexPath: IndexPath)
+    func uncompleteTracker(id: UUID, at indexPath: IndexPath)
+}
 
+final class TrackerCell: UICollectionViewCell {
+    
+    weak var delegate: TrackerCellDelegate?
+    
     var currentDate: Date?
     var trackerId: UUID?
     
     private var indexPath: IndexPath?
-    private var isPlusState = false
+
+    private var isCompletedToday = false
+    private let doneImage = UIImage(named: "Done")
+    private let plusImage = UIImage(named: "Plus")
     
     var  topContainerView: UIView = {
         let view = UIView()
@@ -70,7 +79,6 @@ final class TrackerCell: UICollectionViewCell {
     var  actionButton: UIButton = {
         let button = UIButton()
         button.layer.cornerRadius = 34 / 2
-        button.setImage(UIImage(named: "Plus"), for: .normal)
         button.alpha = 1
         button.layer.masksToBounds = true
         button.translatesAutoresizingMaskIntoConstraints = false
@@ -87,14 +95,6 @@ final class TrackerCell: UICollectionViewCell {
     required init?(coder: NSCoder) {
         super.init(coder: coder)
         fatalError("init(coder:) has not been implemented")
-    }
-    
-    func setupCell(with tracker: Tracker, indexPath: IndexPath) { // TODO 
-        emojiView.setNeedsDisplay()
-        emoji.text = tracker.emoji
-        titleLabel.text = tracker.name
-        dayNumberView.text = tracker.name
-        self.trackerId = tracker.id
     }
     
     private func addSubview() {
@@ -143,13 +143,68 @@ final class TrackerCell: UICollectionViewCell {
         ])
     }
     
-    func configure(with title: String, date: Date, countDays: Int) {
+    func setupCell(with tracker: Tracker, indexPath: IndexPath, completedDay: Int, isCompletedToday: Bool) { // TODO
+        self.trackerId = tracker.id
+        self.isCompletedToday = isCompletedToday
+        self.indexPath = indexPath
+        
+        self.contentView.backgroundColor = .ypWhite
+        self.topContainerView.backgroundColor = tracker.color
+        
+        self.emoji.text = tracker.emoji
+        self.titleLabel.text = tracker.name
+
+        let wordDay = dayWord(for: completedDay)
+        dayNumberView.text = "\(completedDay) \(wordDay)"
+        
+        if isCompletedToday {
+            actionButton.tintColor = .ypWhite
+            actionButton.backgroundColor = tracker.color
+            actionButton.alpha = 0.3
+        } else {
+            actionButton.tintColor = tracker.color
+            actionButton.backgroundColor = .ypWhite
+            actionButton.alpha = 1
+        }
+        
+        let image = isCompletedToday ? doneImage : plusImage
+        actionButton.setImage(image, for: .normal)
+        if actionButton.image(for: .normal) == nil {
+            print("Изображение не установлено для кнопки!")
+        }
+    }
+
+    func configure(with title: String, date: Date) {
         titleLabel.text = title
         self.currentDate = date
     }
     
-    @objc private func buttonTapped() {
-            onButtonTapped?(isPlusState)
-            isPlusState.toggle()
+    func dayWord(for number: Int) -> String {
+        let lastDigit = number % 10
+        let lastTwoDigits = number % 100
+        
+        if lastTwoDigits >= 11 && lastTwoDigits <= 19 {
+            return "дней"
         }
+        
+        switch lastDigit {
+        case 1:
+            return "день"
+        case 2, 3, 4:
+            return "дня"
+        default:
+            return "дней"
+        }
+    }
+    
+    @objc private func buttonTapped() {
+        guard let trackerId = trackerId, let indexPath = indexPath else {
+            print("Нет ID трекера")
+            return }
+        if isCompletedToday {
+            delegate?.uncompleteTracker(id: trackerId, at: indexPath)
+        } else {
+            delegate?.completeTracker(id: trackerId, at: indexPath)
+        }
+    }
 }

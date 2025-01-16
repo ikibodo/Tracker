@@ -102,8 +102,7 @@ final class TrackerTypeViewController: UIViewController {
         navigationController.modalPresentationStyle = .pageSheet
         present(navigationController, animated: true)
     }
-    
-    
+        
     @objc func handleSwipeDown() {
         self.dismiss(animated: true, completion: nil)
     }
