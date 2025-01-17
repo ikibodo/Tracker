@@ -64,10 +64,6 @@ final class ScheduleViewController: UIViewController {
         addSubview()
         addConstraints()
     }
-
-    func loadSelectedSchedule(from schedule: [WeekDay?]) {
-        self.schedule = schedule
-    }
     
     private func navigationBar() {
         guard let navigationBar = navigationController?.navigationBar else { return }
@@ -94,6 +90,10 @@ final class ScheduleViewController: UIViewController {
             saveDaysButton.heightAnchor.constraint(equalToConstant: 60)
             
         ])
+    }
+    
+    func loadSelectedSchedule(from schedule: [WeekDay?]) {
+        self.schedule = schedule
     }
     
     @objc private func switchChanged(_ sender: UISwitch) {

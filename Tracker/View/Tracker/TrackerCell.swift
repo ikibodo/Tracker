@@ -20,7 +20,7 @@ final class TrackerCell: UICollectionViewCell {
     var trackerId: UUID?
     
     private var indexPath: IndexPath?
-
+    
     private var isCompletedToday = false
     private let doneImage = UIImage(named: "Done")
     private let plusImage = UIImage(named: "Plus")
@@ -153,7 +153,7 @@ final class TrackerCell: UICollectionViewCell {
         
         self.emoji.text = tracker.emoji
         self.titleLabel.text = tracker.name
-
+        
         let wordDay = dayWord(for: completedDay)
         dayNumberView.text = "\(completedDay) \(wordDay)"
         
@@ -173,7 +173,7 @@ final class TrackerCell: UICollectionViewCell {
             print("Изображение не установлено для кнопки!")
         }
     }
-
+    
     func configure(with title: String, date: Date) {
         titleLabel.text = title
         self.currentDate = date

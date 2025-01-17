@@ -6,7 +6,7 @@
 //
 import UIKit
 
-final class TrackersViewController: UIViewController, NewHabitOrEventViewControllerDelegate {
+final class TrackersViewController: UIViewController {
     
     private var newHabitOrEventViewController: NewHabitOrEventViewController!
     private var categories: [TrackerCategory] = []
@@ -97,7 +97,7 @@ final class TrackersViewController: UIViewController, NewHabitOrEventViewControl
         datePicker.preferredDatePickerStyle = .compact
         datePicker.datePickerMode = .date
         datePicker.locale = Locale(identifier: "ru_RU")
-//        datePicker.maximumDate = Date() // Второй вариант с ограничением дат, интуитивно понятнее пользователю, но мне меньше нравится, чем реализованный, хотя в том что есть алерта явно не хватает
+        //        datePicker.maximumDate = Date() // Второй вариант с ограничением дат, интуитивно понятнее пользователю блок, но не дающий посмотреть что в следующие дни предстоит.Хотя вариате что есть сейчас алерта (не предусмотрен макетом) явно не хватает чтобы уведомить пользователя, почему нельзя нажать на кнопку.
         datePicker.translatesAutoresizingMaskIntoConstraints = false
         datePicker.addTarget(self, action: #selector(dateChanged), for: .valueChanged)
         return datePicker
@@ -136,7 +136,7 @@ final class TrackersViewController: UIViewController, NewHabitOrEventViewControl
         
         collectionView.dataSource = self
         collectionView.delegate = self
-
+        
         reloadData()
         setupNavigationBar()
         addSubViews()
@@ -148,7 +148,7 @@ final class TrackersViewController: UIViewController, NewHabitOrEventViewControl
     }
     
     private func reloadData() {
-//        categories = MockData.mockData // mockData убрать в следующих спринтах
+        categories = MockData.mockData // mockData убрать в следующих спринтах
         print("Загруженные категории: \(categories)")
         dateChanged()
         print("Видимые категории: \(visibleCategories)")
@@ -226,35 +226,7 @@ final class TrackersViewController: UIViewController, NewHabitOrEventViewControl
             errorLabel.isHidden = true
         }
     }
-
-    func addTracker(_ tracker: Tracker, to category: TrackerCategory) {
-        var addedToCategory = category.title
-        if let categoryIndex = categories.firstIndex(where: { $0.title == category.title }) {
-            updateCategory(at: categoryIndex, with: tracker)
-        } else {
-            addToDefaultCategory(tracker)
-            addedToCategory = "Новая категория"
-        }
-        
-        trackers.append(tracker)
-        print("Трекер \(tracker.name) добавлен в категорию: \(addedToCategory)")
-        showContentOrPlaceholder()
-        collectionView.reloadData()
-    }
     
-    private func updateCategory(at index: Int, with tracker: Tracker) {
-        var updatedTrackers = categories[index].trackers
-        updatedTrackers.append(tracker)
-        categories[index] = TrackerCategory(title: categories[index].title, trackers: updatedTrackers)
-    }
-    
-    private func addToDefaultCategory(_ tracker: Tracker) {
-        if let defaultIndex = categories.firstIndex(where: { $0.title == "Домашний уют" }) {
-            updateCategory(at: defaultIndex, with: tracker)
-        } else {
-            categories.append(TrackerCategory(title: "Новая категория", trackers: [tracker]))
-        }
-    }
     // MARK: - Actions
     
     @objc
@@ -284,7 +256,6 @@ final class TrackersViewController: UIViewController, NewHabitOrEventViewControl
                     print("Трекер без расписания: \(tracker.name)")
                     return true
                 } else {
-//                    return tracker.schedule.contains { weekDay in
                     let containsWeekDay = tracker.schedule.contains { weekDay in
                         weekDay == selectedWeekDay
                     }
@@ -352,7 +323,7 @@ extension TrackersViewController: UICollectionViewDelegate, UICollectionViewData
         print("Создана ячейка для секции \(indexPath.section), элемента \(indexPath.row), с трекером \(tracker.name)")
         return cell
     }
-
+    
     private func isTrackerCompletedToday(id: UUID) -> Bool {
         completedTrackers.contains { trackerRecord in
             isSameTrackerRecord(trackerRecord: trackerRecord, id: id)
@@ -368,11 +339,11 @@ extension TrackersViewController: UICollectionViewDelegate, UICollectionViewData
 extension TrackersViewController: TrackerCellDelegate {
     func completeTracker(id: UUID, at indexPath: IndexPath) {
         let currentDate = Date()
-
-            guard datePicker.date <= currentDate else {
-                print("Ошибка: нельзя отметить трекер для будущей даты \(datePicker.date)")
-                return
-            }
+        
+        guard datePicker.date <= currentDate else {
+            print("Ошибка: нельзя отметить трекер для будущей даты \(datePicker.date)")
+            return
+        }
         
         let trackerRecord = TrackerRecord(id: id, date: datePicker.date)
         print("Выполнен трекер с id \(id) о чем создана запись \(trackerRecord.date)")
@@ -420,5 +391,36 @@ extension TrackersViewController: UICollectionViewDelegateFlowLayout {
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumLineSpacingForSectionAt section: Int) -> CGFloat {
         return 0
+    }
+}
+
+extension TrackersViewController: NewHabitOrEventViewControllerDelegate {
+    func addTracker(_ tracker: Tracker, to category: TrackerCategory) {
+        var addedToCategory = category.title
+        if let categoryIndex = categories.firstIndex(where: { $0.title == category.title }) {
+            updateCategory(at: categoryIndex, with: tracker)
+        } else {
+            addToDefaultCategory(tracker)
+            addedToCategory = "Новая категория"
+        }
+        
+        trackers.append(tracker)
+        print("Трекер \(tracker.name) добавлен в категорию: \(addedToCategory)")
+        showContentOrPlaceholder()
+        collectionView.reloadData()
+    }
+    
+    private func updateCategory(at index: Int, with tracker: Tracker) {
+        var updatedTrackers = categories[index].trackers
+        updatedTrackers.append(tracker)
+        categories[index] = TrackerCategory(title: categories[index].title, trackers: updatedTrackers)
+    }
+    
+    private func addToDefaultCategory(_ tracker: Tracker) {
+        if let defaultIndex = categories.firstIndex(where: { $0.title == "Домашний уют" }) {
+            updateCategory(at: defaultIndex, with: tracker)
+        } else {
+            categories.append(TrackerCategory(title: "Новая категория", trackers: [tracker]))
+        }
     }
 }

@@ -20,8 +20,7 @@ final class NewHabitOrEventViewController: UIViewController, ScheduleViewControl
     private let itemsForHabits = ["Категория", "Расписание"]
     private let itemsForEvents = ["Категория"]
     private var currentItems: [String] = []
-    var categories: [TrackerCategory] = []
-    var viewCategories: [TrackerCategory] = []
+    private var categoryTitle: String?
     
     private lazy var titleLabel: UILabel = {
         let label = UILabel()
@@ -201,21 +200,6 @@ final class NewHabitOrEventViewController: UIViewController, ScheduleViewControl
         print("Обновленное расписание \(schedule.map { $0?.rawValue ?? "None" })")
     }
     
-    private func addNewTracker(_ tracker: Tracker, to categoryTitle: String) {
-        if let existingCategoryIndex = viewCategories.firstIndex(where: { $0.title == categoryTitle }) {
-            var updatedCategory = viewCategories[existingCategoryIndex]
-            var newTrackers = updatedCategory.trackers
-            newTrackers.append(tracker)
-            updatedCategory = TrackerCategory(title: updatedCategory.title, trackers: newTrackers)
-            viewCategories[existingCategoryIndex] = updatedCategory
-            delegate?.addTracker(tracker, to: updatedCategory)
-        } else {
-            let defaultCategory = TrackerCategory(title: "Мои трекеры", trackers: [tracker])
-            viewCategories.append(defaultCategory)
-            delegate?.addTracker(tracker, to: defaultCategory)
-        }
-    }
-    
     @objc
     private func createButtonTapped() {
         let newTracker = Tracker(
@@ -225,10 +209,12 @@ final class NewHabitOrEventViewController: UIViewController, ScheduleViewControl
             emoji: "🌟",
             schedule: self.schedule
         )
-        let categoryTitle = self.title ?? "Мои трекеры"
         
-        addNewTracker(newTracker, to: categoryTitle)
-        dismiss(animated: true, completion: nil)
+        let categoryTracker = TrackerCategory(
+            title: self.categoryTitle ?? "Новые трекеры",
+            trackers: [newTracker])
+        delegate?.addTracker(newTracker, to: categoryTracker)
+        presentingViewController?.presentingViewController?.dismiss(animated: true)
         print("Создать нажато и создается трекер")
     }
     
