@@ -137,7 +137,9 @@ final class TrackersViewController: UIViewController {
         collectionView.dataSource = self
         collectionView.delegate = self
         
-        reloadData()
+        categories = MockData.mockData // mockData убрать в следующих спринтах
+        dateChanged()
+        
         setupNavigationBar()
         addSubViews()
         addConstraints()
@@ -145,13 +147,6 @@ final class TrackersViewController: UIViewController {
         
         newHabitOrEventViewController = NewHabitOrEventViewController()
         newHabitOrEventViewController.delegate = self
-    }
-    
-    private func reloadData() {
-        categories = MockData.mockData // mockData убрать в следующих спринтах
-        print("Загруженные категории: \(categories)")
-        dateChanged()
-        print("Видимые категории: \(visibleCategories)")
     }
     
     private func addSubViews() {
@@ -403,11 +398,9 @@ extension TrackersViewController: NewHabitOrEventViewControllerDelegate {
             addToDefaultCategory(tracker)
             addedToCategory = "Новая категория"
         }
-        
         trackers.append(tracker)
         print("Трекер \(tracker.name) добавлен в категорию: \(addedToCategory)")
-        showContentOrPlaceholder()
-        collectionView.reloadData()
+        dateChanged()
     }
     
     private func updateCategory(at index: Int, with tracker: Tracker) {

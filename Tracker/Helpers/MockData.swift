@@ -15,7 +15,7 @@ final class MockData {
                         name: "Поливать растения",
                         color: .colorSelected18,
                         emoji: "❤️",
-                        schedule: [.monday, .thursday]),
+                        schedule: [.monday, .friday]),
             ]),
         TrackerCategory(
             title: "Радостные мелочи",
