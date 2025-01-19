@@ -37,6 +37,20 @@
 			);
 			target = 6C6CF2652D1D980B00EF7452 /* Tracker */;
 		};
+		6CF2991A2D2AE40800BF5905 /* Exceptions for "Tracker" folder in "TrackerTests" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				"Resources/YS Display-Bold.ttf",
+			);
+			target = 6C6CF27E2D1D980C00EF7452 /* TrackerTests */;
+		};
+		6CF2991B2D2AE40800BF5905 /* Exceptions for "Tracker" folder in "TrackerUITests" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				"Resources/YS Display-Bold.ttf",
+			);
+			target = 6C6CF2882D1D980C00EF7452 /* TrackerUITests */;
+		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -44,6 +58,8 @@
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
 				6C6CF2912D1D980C00EF7452 /* Exceptions for "Tracker" folder in "Tracker" target */,
+				6CF2991A2D2AE40800BF5905 /* Exceptions for "Tracker" folder in "TrackerTests" target */,
+				6CF2991B2D2AE40800BF5905 /* Exceptions for "Tracker" folder in "TrackerUITests" target */,
 			);
 			path = Tracker;
 			sourceTree = "<group>";
