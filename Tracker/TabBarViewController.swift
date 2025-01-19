@@ -32,12 +32,6 @@ final class TabBarViewController: UITabBarController {
             tag: 1)
         statisticsViewController.tabBarItem = statisticsTabBarItem
         
-//        let statisticsTabBarItem = UIViewController()
-//        statisticsViewController.tabBarItem = UITabBarItem(
-//            title: "Статистика",
-//            image: UIImage(named: "Rabbit"),
-//            tag: 1)
-        
         self.viewControllers = [trackerViewController, statisticsViewController]
     }
 }

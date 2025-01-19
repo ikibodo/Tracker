@@ -13,9 +13,9 @@ final class TrackersViewController: UIViewController {
     private var visibleCategories: [TrackerCategory] = []
     private var trackers: [Tracker] = []
     private var completedTrackers: [TrackerRecord] = []
-    private var selectedDate: Date = Date()
     private let cellIdentifier = "cell"
     private var countDays: Int = 0
+    private var currentDate: Date = Date()
     
     private struct cellParams {
         let cellCount: Int
@@ -96,7 +96,8 @@ final class TrackersViewController: UIViewController {
         let datePicker = UIDatePicker()
         datePicker.preferredDatePickerStyle = .compact
         datePicker.datePickerMode = .date
-        datePicker.locale = Locale(identifier: "ru_RU")
+        let localID = Locale.preferredLanguages.first ?? "ru_RU"
+        datePicker.locale = Locale(identifier: localID)
         //        datePicker.maximumDate = Date() // Второй вариант с ограничением дат, интуитивно понятнее пользователю блок, но не дающий посмотреть что в следующие дни предстоит.Хотя вариате что есть сейчас алерта (не предусмотрен макетом) явно не хватает чтобы уведомить пользователя, почему нельзя нажать на кнопку.
         datePicker.translatesAutoresizingMaskIntoConstraints = false
         datePicker.addTarget(self, action: #selector(dateChanged), for: .valueChanged)
@@ -140,7 +141,7 @@ final class TrackersViewController: UIViewController {
         categories = MockData.mockData // mockData убрать в следующих спринтах
         dateChanged()
         
-        setupNavigationBar()
+        navigationBar()
         addSubViews()
         addConstraints()
         showContentOrPlaceholder()
@@ -152,25 +153,19 @@ final class TrackersViewController: UIViewController {
     private func addSubViews() {
         collectionView.addSubview(errorImage)
         collectionView.addSubview(errorLabel)
-        view.addSubview(plusButton)
         view.addSubview(descriptionLabel)
         view.addSubview(searchTextField)
         view.addSubview(errorImage)
         view.addSubview(errorLabel)
-        view.addSubview(datePicker)
-        view.addSubview(dateLabel)
         view.addSubview(collectionView)
     }
     
     private func addConstraints() {
         NSLayoutConstraint.activate([
-            plusButton.topAnchor.constraint(equalTo: view.topAnchor, constant: 45),
-            plusButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 6),
-            
-            descriptionLabel.topAnchor.constraint(equalTo: view.topAnchor, constant: 88),
+            descriptionLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 1),
             descriptionLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
-            
-            searchTextField.topAnchor.constraint(equalTo: view.topAnchor, constant: 136),
+
+            searchTextField.topAnchor.constraint(equalTo: descriptionLabel.bottomAnchor, constant: 7),
             searchTextField.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
             searchTextField.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
             
@@ -184,29 +179,13 @@ final class TrackersViewController: UIViewController {
             collectionView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
             collectionView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor),
             collectionView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor),
-            
-            datePicker.heightAnchor.constraint(equalToConstant: 34),
-            datePicker.widthAnchor.constraint(equalToConstant: 77),
-            datePicker.centerYAnchor.constraint(equalTo: plusButton.centerYAnchor),
-            datePicker.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
-            
-            dateLabel.heightAnchor.constraint(equalToConstant: 34),
-            dateLabel.widthAnchor.constraint(equalToConstant: 77),
-            dateLabel.centerYAnchor.constraint(equalTo: plusButton.centerYAnchor),
-            dateLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
         ])
     }
     
-    private func setupNavigationBar() {
+    private func navigationBar() {
         navigationController?.setNavigationBarHidden(false, animated: false)
         guard (navigationController?.navigationBar) != nil else { return }
-        
-        let containerView = UIView()
-        containerView.translatesAutoresizingMaskIntoConstraints = false
-        containerView.addSubview(plusButton)
-        containerView.addSubview(descriptionLabel)
-        
-        navigationItem.leftBarButtonItem = UIBarButtonItem(customView: containerView)
+        navigationItem.leftBarButtonItem = UIBarButtonItem(customView: plusButton)
         navigationItem.rightBarButtonItem = UIBarButtonItem(customView: datePicker)
     }
     
@@ -226,6 +205,7 @@ final class TrackersViewController: UIViewController {
     
     @objc
     private func didTapPlusButton() {
+        print("Кнопка плюс нажата и открывается страница выбора типа трекера")
         let viewController = TrackerTypeViewController()
         viewController.delegate = self
         let navigationController = UINavigationController(rootViewController: viewController)
@@ -234,14 +214,13 @@ final class TrackersViewController: UIViewController {
     }
     
     @objc private func dateChanged() {
-        let selectedDate = datePicker.date
-        let dateFormatter = DateFormatter()
-        dateFormatter.dateFormat = "dd.MM.yy"
-        let formattedDate = dateFormatter.string(from: selectedDate)
-        dateLabel.text = formattedDate
-        print("Выбранная дата: \(formattedDate)")
+        currentDate = Calendar.current.startOfDay(for: datePicker.date)
+        updateVisibleCategories()
+    }
+    
+    private func updateVisibleCategories() {
         let calendar = Calendar.current
-        let selectedDayIndex = calendar.component(.weekday, from: datePicker.date)
+        let selectedDayIndex = calendar.component(.weekday, from: currentDate)
         guard let selectedWeekDay = WeekDay.from(weekdayIndex: selectedDayIndex) else { return }
         
         visibleCategories = categories.compactMap { category in
@@ -333,9 +312,8 @@ extension TrackersViewController: UICollectionViewDelegate, UICollectionViewData
 
 extension TrackersViewController: TrackerCellDelegate {
     func completeTracker(id: UUID, at indexPath: IndexPath) {
-        let currentDate = Date()
-        
-        guard datePicker.date <= currentDate else {
+        let todayDate = Date()
+        guard datePicker.date <= todayDate else {
             print("Ошибка: нельзя отметить трекер для будущей даты \(datePicker.date)")
             return
         }

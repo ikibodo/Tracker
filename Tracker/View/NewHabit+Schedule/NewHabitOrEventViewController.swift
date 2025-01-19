@@ -25,9 +25,8 @@ final class NewHabitOrEventViewController: UIViewController, ScheduleViewControl
     private lazy var titleLabel: UILabel = {
         let label = UILabel()
         label.textColor = .ypBlack
-        label.font = .systemFont(ofSize: 17)
+        label.font = .systemFont(ofSize: 16, weight: .medium)
         label.textAlignment = .center
-        label.text = "Новая привычка"
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
@@ -35,12 +34,14 @@ final class NewHabitOrEventViewController: UIViewController, ScheduleViewControl
     private lazy var trackerNameInput: UITextField = {
         let textField = UITextField()
         textField.backgroundColor = .ypLightGray.withAlphaComponent(0.3)
-        textField.tintColor = .ypGray
+        textField.tintColor = .ypBlack
+        textField.textColor =  .ypBlack
+        textField.font = .systemFont(ofSize: 17, weight: .regular)
         textField.placeholder = "Введите название трекера"
         textField.leftView = UIView(frame: CGRect(x: 0, y: 0, width: 8, height: 0))
         textField.leftViewMode = .always
-        textField.borderStyle = .roundedRect
         textField.layer.cornerRadius = 16
+        textField.clearButtonMode = .whileEditing
         textField.clipsToBounds = true
         textField.delegate = self
         textField.translatesAutoresizingMaskIntoConstraints = false
@@ -64,7 +65,6 @@ final class NewHabitOrEventViewController: UIViewController, ScheduleViewControl
         tableView.layer.maskedCorners = [.layerMaxXMaxYCorner, .layerMaxXMinYCorner, .layerMinXMaxYCorner, .layerMinXMinYCorner]
         tableView.clipsToBounds = true
         tableView.layer.masksToBounds = true
-        tableView.separatorStyle = .singleLine
         tableView.separatorInset = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 16)
         tableView.isScrollEnabled = false
         tableView.translatesAutoresizingMaskIntoConstraints = false
@@ -119,8 +119,26 @@ final class NewHabitOrEventViewController: UIViewController, ScheduleViewControl
         trackerItems.delegate = self
         trackerItems.dataSource = self
         navigationBar()
+        updateNavigationBarTitle(forItems: currentItems)
         addSubViews()
         addConstraints()
+    }
+    
+    func didUpdateSchedule(_ schedule: [WeekDay?]) {
+        self.schedule = schedule
+        validateCreateButtonState()
+        trackerItems.reloadData()
+        print("Обновленное расписание \(schedule.map { $0?.rawValue ?? "None" })")
+    }
+    
+    private func updateNavigationBarTitle(forItems items: [String]) {
+        if items == itemsForHabits {
+            titleLabel.text = "Новая привычка"
+        } else if items == itemsForEvents {
+            titleLabel.text = "Новое нерегулярное событие"
+        }
+        guard let navigationBar = navigationController?.navigationBar else { return }
+        navigationBar.topItem?.titleView = titleLabel
     }
     
     private func navigationBar() {
@@ -193,13 +211,6 @@ final class NewHabitOrEventViewController: UIViewController, ScheduleViewControl
         createButton.backgroundColor = createButton.isEnabled ? .ypBlack : .ypGray
     }
     
-    func didUpdateSchedule(_ schedule: [WeekDay?]) {
-        self.schedule = schedule
-        validateCreateButtonState()
-        trackerItems.reloadData()
-        print("Обновленное расписание \(schedule.map { $0?.rawValue ?? "None" })")
-    }
-    
     @objc
     private func createButtonTapped() {
         let newTracker = Tracker(
@@ -241,12 +252,8 @@ extension NewHabitOrEventViewController: UITextFieldDelegate {
     func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
         let currentText = (textField.text ?? "") as NSString
         let updatedText = currentText.replacingCharacters(in: range, with: string)
-        
-        if updatedText.count >= 38 {
-            limitLabel.isHidden = false
-        } else {
-            limitLabel.isHidden = true
-        }
+        let maxSymbolNumber = 38
+        limitLabel.isHidden = !(updatedText.count >= maxSymbolNumber)
         updateConstraints()
         return true
     }
@@ -286,7 +293,7 @@ extension NewHabitOrEventViewController: UITableViewDelegate{
         cell.selectionStyle = .none
         cell.backgroundColor = .ypLightGray.withAlphaComponent(0.3)
         cell.textLabel?.text = currentItems[indexPath.row]
-        cell.textLabel?.font = UIFont.systemFont(ofSize: 17)
+        cell.textLabel?.font = UIFont.systemFont(ofSize: 17, weight: .regular)
         cell.textLabel?.textColor = .ypBlack
         
         if indexPath.row == 1, currentItems.contains("Расписание") {
@@ -298,6 +305,11 @@ extension NewHabitOrEventViewController: UITableViewDelegate{
             cell.detailTextLabel?.font = UIFont.systemFont(ofSize: 17)
             cell.separatorInset = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: .greatestFiniteMagnitude)
         }
+        
+        if indexPath.row == 0, !currentItems.contains("Расписание") {
+            cell.separatorInset = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: .greatestFiniteMagnitude)
+        }
+        
         let chevronImage = UIImage(named: "Chevron")
         if let chevronImage = chevronImage {
             let chevronImageView = UIImageView(image: chevronImage)

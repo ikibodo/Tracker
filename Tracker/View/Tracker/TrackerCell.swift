@@ -78,6 +78,7 @@ final class TrackerCell: UICollectionViewCell {
     
     var  actionButton: UIButton = {
         let button = UIButton()
+        let buttonSize = 34
         button.layer.cornerRadius = 34 / 2
         button.alpha = 1
         button.layer.masksToBounds = true
