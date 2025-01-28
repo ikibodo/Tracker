@@ -313,11 +313,10 @@ extension TrackersViewController: UICollectionViewDelegate, UICollectionViewData
 extension TrackersViewController: TrackerCellDelegate {
     func completeTracker(id: UUID, at indexPath: IndexPath) {
         let todayDate = Date()
-        guard datePicker.date <= todayDate else {
+        guard currentDate <= todayDate else {
             print("Ошибка: нельзя отметить трекер для будущей даты \(datePicker.date)")
             return
         }
-        
         let trackerRecord = TrackerRecord(id: id, date: datePicker.date)
         print("Выполнен трекер с id \(id) о чем создана запись \(trackerRecord.date)")
         completedTrackers.append(trackerRecord)

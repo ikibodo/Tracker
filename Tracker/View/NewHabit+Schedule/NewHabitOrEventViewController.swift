@@ -87,7 +87,7 @@ final class NewHabitOrEventViewController: UIViewController, ScheduleViewControl
         let itemWidth = (UIScreen.main.bounds.width - 18 * 2 - 5 * 5) / 6
         layout.itemSize = CGSize(width: itemWidth, height: itemWidth)
         
-        layout.headerReferenceSize = CGSize(width: UIScreen.main.bounds.width, height: 40)
+        layout.headerReferenceSize = CGSize(width: UIScreen.main.bounds.width, height: 34)
         
         let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
         collectionView.backgroundColor = .white
@@ -218,7 +218,7 @@ final class NewHabitOrEventViewController: UIViewController, ScheduleViewControl
             cancelButton.rightAnchor.constraint(equalTo: createButton.leftAnchor, constant: -8),
             cancelButton.heightAnchor.constraint(equalToConstant: 60),
             
-            collectionView.topAnchor.constraint(equalTo: trackerItems.bottomAnchor, constant: 32),
+            collectionView.topAnchor.constraint(equalTo: trackerItems.bottomAnchor, constant: 16),
             collectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             collectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             collectionView.bottomAnchor.constraint(equalTo: createButton.topAnchor, constant: -16),
