@@ -61,6 +61,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
     
     func applicationWillTerminate(_ application: UIApplication) {
-        saveContext()
+        (UIApplication.shared.delegate as? AppDelegate)?.saveContext()
+//        saveContext()
     }
 }

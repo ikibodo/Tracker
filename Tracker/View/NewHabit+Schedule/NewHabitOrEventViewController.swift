@@ -21,6 +21,8 @@ final class NewHabitOrEventViewController: UIViewController, ScheduleViewControl
     private let itemsForEvents = ["Категория"]
     private var currentItems: [String] = []
     private var categoryTitle: String?
+    private var emoji: String?
+    private var color: UIColor?
     
     private let emojis = [
         "🙂", "😻", "🌺", "🐶", "❤️", "😱", "😇", "😡", "🥶", "🤔", "🙌", "🍔", "🥦", "🏓", "🥇", "🎸", "🏝️", "😪" ]
@@ -255,8 +257,8 @@ final class NewHabitOrEventViewController: UIViewController, ScheduleViewControl
         let newTracker = Tracker(
             id: UUID(),
             name: trackerNameInput.text ?? "Привычка",
-            color: .colorSelected17,
-            emoji: "🌟",
+            color: self.color ?? .colorSelected17,
+            emoji: self.emoji ?? "🌟",
             schedule: self.schedule
         )
         
@@ -401,11 +403,13 @@ extension NewHabitOrEventViewController: UICollectionViewDelegate, UICollectionV
         if indexPath.section == 0 {
             let previousIndex = selectedEmojiIndex
             selectedEmojiIndex = indexPath
+            self.emoji = emojis[indexPath.item]
             collectionView.reloadItems(at: [indexPath, previousIndex].compactMap { $0 })
             print("Выбран эмодзи: \(emojis[indexPath.item])")
         } else {
             let previousIndex = selectedColorIndex
             selectedColorIndex = indexPath
+            self.color = colors[indexPath.item]
             collectionView.reloadItems(at: [indexPath, previousIndex].compactMap { $0 })
             print("Выбран цвет: \(colors[indexPath.item])")
         }

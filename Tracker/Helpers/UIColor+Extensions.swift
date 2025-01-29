@@ -35,3 +35,35 @@ extension UIColor {
     static var colorSelected17: UIColor { UIColor(named: "Color selection 17") ?? UIColor.purple }
     static var colorSelected18: UIColor { UIColor(named: "Color selection 18") ?? UIColor.green }
 }
+
+import UIKit
+
+let colorDictionary: [String: UIColor] = [
+    "Tr Black": .ypBlack,
+    "Tr Background": .ypBackground,
+    "Tr White": .ypWhite,
+    "Tr Green": .ypGreen,
+    "Tr Blue": .ypBlue,
+    "Tr Red": .ypRed,
+    "Tr Gray": .ypGray,
+    "Tr Light Gray": .ypLightGray,
+    "Color datePickLabel": .colorSelected0,
+    "Color selection 1": .colorSelected1,
+    "Color selection 2": .colorSelected2,
+    "Color selection 3": .colorSelected3,
+    "Color selection 4": .colorSelected4,
+    "Color selection 5": .colorSelected5,
+    "Color selection 6": .colorSelected6,
+    "Color selection 7": .colorSelected7,
+    "Color selection 8": .colorSelected8,
+    "Color selection 9": .colorSelected9,
+    "Color selection 10": .colorSelected10,
+    "Color selection 11": .colorSelected11,
+    "Color selection 12": .colorSelected12,
+    "Color selection 13": .colorSelected13,
+    "Color selection 14": .colorSelected14,
+    "Color selection 15": .colorSelected15,
+    "Color selection 16": .colorSelected16,
+    "Color selection 17": .colorSelected17,
+    "Color selection 18": .colorSelected18
+]

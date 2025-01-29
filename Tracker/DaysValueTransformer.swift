@@ -6,13 +6,16 @@
 //
 import Foundation
 
-@objc(DaysValueTransformer)
+@objc
 final class DaysValueTransformer: ValueTransformer {
     override class func transformedValueClass() -> AnyClass { NSData.self }
     override class func allowsReverseTransformation() -> Bool { true }
     
     override func transformedValue(_ value: Any?) -> Any? {
-        guard let days = value as? [WeekDay] else { return nil }
+        guard let days = value as? [WeekDay] else {
+            print("Invalid value: \(String(describing: value))")
+            return nil
+        }
         return try? JSONEncoder().encode(days)
     }
     
