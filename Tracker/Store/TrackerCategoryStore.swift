@@ -90,10 +90,18 @@ final class TrackerCategoryStore: NSObject, NSFetchedResultsControllerDelegate {
         } else {
             schedule = []
         }
+//        if let scheduleString = trackerCoreData.schedule {
+//            // Разделяем строку на элементы
+//            let scheduleStrings = scheduleString.split(separator: ",").map { String($0) }
+//            // Преобразуем каждый элемент строки в WeekDay
+//            schedule = scheduleStrings.compactMap { WeekDay(rawValue: $0) }
+//        } else {
+//            schedule = []
+//        }
         return Tracker(id: id, name: name, color: color, emoji: emoji, schedule: schedule)
     }
     
-    func setupFetchedResultsController()  -> NSFetchedResultsController<TrackerCategoryCoreData> {
+    func setupFetchedResultsController() {
         let fetchRequest: NSFetchRequest<TrackerCategoryCoreData> = TrackerCategoryCoreData.fetchRequest()
         fetchRequest.sortDescriptors = [NSSortDescriptor(key: "title", ascending: true)]
         
@@ -110,7 +118,6 @@ final class TrackerCategoryStore: NSObject, NSFetchedResultsControllerDelegate {
         } catch {
             print("Failed to fetch categories: \(error)")
         }
-        return fetchedResultsController
     }
     
     func fetchAllCategories() throws -> [TrackerCategoryCoreData] {

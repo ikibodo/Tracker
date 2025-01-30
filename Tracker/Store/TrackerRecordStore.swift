@@ -69,7 +69,7 @@ final class TrackerRecordStore: NSObject, NSFetchedResultsControllerDelegate {
          }
     }
     
-    func setupFetchedResultsController() -> NSFetchedResultsController<TrackerRecordCoreData> {
+    func setupFetchedResultsController() {
         let fetchRequest: NSFetchRequest<TrackerRecordCoreData> = TrackerRecordCoreData.fetchRequest()
         fetchRequest.sortDescriptors = [NSSortDescriptor(key: "date", ascending: false)]
         
@@ -86,7 +86,6 @@ final class TrackerRecordStore: NSObject, NSFetchedResultsControllerDelegate {
         } catch {
             print("Failed to fetch tracker records: \(error)")
         }
-        return fetchedResultsController
     }
     
     func fetchAllRecords() throws -> [TrackerRecordCoreData] {

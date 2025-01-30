@@ -56,6 +56,8 @@ final class TrackerStore: NSObject, NSFetchedResultsControllerDelegate {
             print("❌ Ошибка преобразования расписания! Schedule не сохранен")
             trackerCoreData.schedule = nil
         }
+//        let scheduleStrings = tracker.schedule.compactMap { $0?.rawValue } 
+//            trackerCoreData.schedule = scheduleStrings.joined(separator: ",")
     }
     
     func fetchCategory(with title: String) throws -> TrackerCategoryCoreData? {
@@ -64,7 +66,7 @@ final class TrackerStore: NSObject, NSFetchedResultsControllerDelegate {
         return try context.fetch(fetchRequest).first
     }
     
-    func setupFetchedResultsController() -> NSFetchedResultsController<TrackerCoreData> {
+    func setupFetchedResultsController(){
         let fetchRequest: NSFetchRequest<TrackerCoreData> = TrackerCoreData.fetchRequest()
         fetchRequest.sortDescriptors = [NSSortDescriptor(key: "name", ascending: true)]
         
@@ -81,7 +83,6 @@ final class TrackerStore: NSObject, NSFetchedResultsControllerDelegate {
         } catch {
             print("Failed to fetch trackers: \(error)")
         }
-        return fetchedResultsController
     }
     
     func fetchAllTrackers() throws -> [TrackerCoreData] {

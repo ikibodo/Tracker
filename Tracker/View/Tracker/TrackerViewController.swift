@@ -137,11 +137,11 @@ final class TrackersViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .ypWhite
-
         collectionView.dataSource = self
         collectionView.delegate = self
         
         trackerCategoryStore.delegate = self
+        trackerCategoryStore.setupFetchedResultsController()
 //      categories = MockData.mockData
         loadCategories()
 
@@ -399,49 +399,53 @@ extension TrackersViewController: NewHabitOrEventViewControllerDelegate {
 
 extension TrackersViewController: TrackerCategoryStoreDelegate {
     private func loadCategories() {
-        _ = trackerCategoryStore.setupFetchedResultsController()
+//        trackerCategoryStore.setupFetchedResultsController()
         categories = trackerCategoryStore.trackersCategory
         print("Загруженные категории: \(categories)")
          collectionView.reloadData()
+//        dateChanged()
+//        updateVisibleCategories()
     }
     
     func didUpdateCategories(inserted: Set<IndexPath>, deleted: Set<IndexPath>, updated: Set<IndexPath>) {
+        loadCategories()
         collectionView.performBatchUpdates {
             collectionView.insertItems(at: Array(inserted))
             collectionView.deleteItems(at: Array(deleted))
             collectionView.reloadItems(at: Array(updated))
         }
+        updateVisibleCategories()
         collectionView.reloadData()
     }
     
-//    func deleteAllData() {
-//        do {
-//            let recordsToDelete = try trackerRecordStore.fetchAllRecords()
-//            for record in recordsToDelete {
-//                try trackerRecordStore.deleteRecord(id: record.id!, date: record.date!)
-//            }
-//        } catch {
-//            print("Ошибка при удалении записей: \(error)")
-//        }
-//        
-//        do {
-//            let trackersToDelete = try trackerStore.fetchAllTrackers()
-//            for tracker in trackersToDelete {
-//                trackerStore.deleteTracker(tracker)
-//            }
-//        } catch {
-//            print("Ошибка при удалении трекеров: \(error)")
-//        }
-//        
-//        do {
-//            let categoriesToDelete = try trackerCategoryStore.fetchAllCategories()
-//            for category in categoriesToDelete {
-//                trackerCategoryStore.deleteCategory(category)
-//            }
-//        } catch {
-//            print("Ошибка при удалении категорий: \(error)")
-//        }
-//        categories.removeAll()
-//        collectionView.reloadData()
-//    }
+    func deleteAllData() {
+        do {
+            let recordsToDelete = try trackerRecordStore.fetchAllRecords()
+            for record in recordsToDelete {
+                try trackerRecordStore.deleteRecord(id: record.id!, date: record.date!)
+            }
+        } catch {
+            print("Ошибка при удалении записей: \(error)")
+        }
+        
+        do {
+            let trackersToDelete = try trackerStore.fetchAllTrackers()
+            for tracker in trackersToDelete {
+                trackerStore.deleteTracker(tracker)
+            }
+        } catch {
+            print("Ошибка при удалении трекеров: \(error)")
+        }
+        
+        do {
+            let categoriesToDelete = try trackerCategoryStore.fetchAllCategories()
+            for category in categoriesToDelete {
+                trackerCategoryStore.deleteCategory(category)
+            }
+        } catch {
+            print("Ошибка при удалении категорий: \(error)")
+        }
+        categories.removeAll()
+        collectionView.reloadData()
+    }
 }

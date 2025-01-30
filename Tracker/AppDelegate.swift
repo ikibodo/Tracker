@@ -12,17 +12,32 @@ import CoreData
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
-    
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         DaysValueTransformer.register()
-        
+//        checkAndRemoveOldPersistentStore()
         window = UIWindow()
         window?.rootViewController = UIViewController()
         window?.makeKeyAndVisible()
         return true
     }
-
+    
+    func checkAndRemoveOldPersistentStore() {
+        if let store = persistentContainer.persistentStoreCoordinator.persistentStores.first {
+            let storeURL = store.url
+            if let storeURL = storeURL {
+                do {
+                    try FileManager.default.removeItem(at: storeURL)
+                    print("Старый persistent store удален.")
+                } catch {
+                    print("Ошибка удаления старого persistent store: \(error)")
+                }
+            }
+        } else {
+            print("Не удалось найти persistent store.")
+        }
+    }
+    
     // MARK: UISceneSession Lifecycle
 
     func application(_ application: UIApplication, configurationForConnecting connectingSceneSession: UISceneSession, options: UIScene.ConnectionOptions) -> UISceneConfiguration {
@@ -40,6 +55,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         container.loadPersistentStores(completionHandler: { (storeDescription, error) in
             if let error = error as NSError? {
                 fatalError("Unresolved error \(error), \(error.userInfo)")
+//                print("Ошибка при загрузке persistent store: \(error), \(error.userInfo)")
             }
         })
         return container

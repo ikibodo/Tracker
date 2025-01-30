@@ -257,7 +257,7 @@ final class NewHabitOrEventViewController: UIViewController, ScheduleViewControl
         let newTracker = Tracker(
             id: UUID(),
             name: trackerNameInput.text ?? "Привычка",
-            color: self.color ?? .colorSelected17,
+            color: self.color ?? .colorSelected5,
             emoji: self.emoji ?? "🌟",
             schedule: self.schedule
         )
