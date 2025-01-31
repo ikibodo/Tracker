@@ -90,14 +90,6 @@ final class TrackerCategoryStore: NSObject, NSFetchedResultsControllerDelegate {
         } else {
             schedule = []
         }
-//        if let scheduleString = trackerCoreData.schedule {
-//            // Разделяем строку на элементы
-//            let scheduleStrings = scheduleString.split(separator: ",").map { String($0) }
-//            // Преобразуем каждый элемент строки в WeekDay
-//            schedule = scheduleStrings.compactMap { WeekDay(rawValue: $0) }
-//        } else {
-//            schedule = []
-//        }
         return Tracker(id: id, name: name, color: color, emoji: emoji, schedule: schedule)
     }
     
@@ -182,4 +174,3 @@ final class TrackerCategoryStore: NSObject, NSFetchedResultsControllerDelegate {
         delegate?.didUpdateCategories(inserted: insertedIndexes, deleted: deletedIndexes, updated: updatedIndexes)
     }
 }
-

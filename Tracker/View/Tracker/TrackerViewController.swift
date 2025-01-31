@@ -142,10 +142,8 @@ final class TrackersViewController: UIViewController {
         
         trackerCategoryStore.delegate = self
         trackerCategoryStore.setupFetchedResultsController()
-//      categories = MockData.mockData
-        loadCategories()
-
-        dateChanged()
+        //      categories = MockData.mockData
+        
         navigationBar()
         addSubViews()
         addConstraints()
@@ -153,7 +151,10 @@ final class TrackersViewController: UIViewController {
         
         newHabitOrEventViewController = NewHabitOrEventViewController()
         newHabitOrEventViewController.delegate = self
-//        deleteAllData()
+        
+        loadCategories()
+        dateChanged()
+        //      deleteAllData()
     }
     
     private func addSubViews() {
@@ -170,7 +171,7 @@ final class TrackersViewController: UIViewController {
         NSLayoutConstraint.activate([
             descriptionLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 1),
             descriptionLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
-
+            
             searchTextField.topAnchor.constraint(equalTo: descriptionLabel.bottomAnchor, constant: 7),
             searchTextField.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
             searchTextField.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
@@ -227,19 +228,21 @@ final class TrackersViewController: UIViewController {
     private func updateVisibleCategories() {
         let calendar = Calendar.current
         let selectedDayIndex = calendar.component(.weekday, from: currentDate)
+        print("Update Visible Categories: selectedDayIndex: \(selectedDayIndex)")
+        
         guard let selectedWeekDay = WeekDay.from(weekdayIndex: selectedDayIndex) else { return }
         loadCategories()
         visibleCategories = categories.compactMap { category in
             let trackers = category.trackers.filter { tracker in
-                print("Проверка трекера: \(tracker.name)")
+                print("Update Visible Categories: Проверка трекера: \(tracker.name)")
                 if tracker.schedule.isEmpty {
-                    print("Трекер без расписания: \(tracker.name)")
+                    print("Update Visible Categories: Трекер без расписания: \(tracker.name)")
                     return true
                 } else {
                     let containsWeekDay = tracker.schedule.contains { weekDay in
                         weekDay == selectedWeekDay
                     }
-                    print("Трекер содержит \(selectedWeekDay): \(containsWeekDay)")
+                    print("Update Visible Categories: Трекер содержит \(selectedWeekDay): \(containsWeekDay)")
                     return containsWeekDay
                 }
             }
@@ -250,7 +253,7 @@ final class TrackersViewController: UIViewController {
             )
         }
         if visibleCategories.isEmpty {
-            print("Видимые категории: \(visibleCategories)")
+            print("Update Visible Categories: Видимые категории: \(visibleCategories)")
             showErrorImage(true)
         } else {
             showErrorImage(false)
@@ -288,6 +291,10 @@ extension TrackersViewController: UICollectionViewDelegate, UICollectionViewData
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        guard indexPath.section < visibleCategories.count else {
+            print("Ошибка: indexPath.section (\(indexPath.section)) выходит за пределы visibleCategories (\(visibleCategories.count))")
+            return UICollectionViewCell()
+        }
         guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "cell", for: indexPath) as? TrackerCell else { return UICollectionViewCell() }
         
         let tracker = visibleCategories[indexPath.section].trackers[indexPath.row]
@@ -399,21 +406,17 @@ extension TrackersViewController: NewHabitOrEventViewControllerDelegate {
 
 extension TrackersViewController: TrackerCategoryStoreDelegate {
     private func loadCategories() {
-//        trackerCategoryStore.setupFetchedResultsController()
+        print("Загруженные начальные категории: \(trackerCategoryStore.trackersCategory)")
+        if trackerCategoryStore.trackersCategory.isEmpty {
+            print("Категории пусты")
+        }
         categories = trackerCategoryStore.trackersCategory
-        print("Загруженные категории: \(categories)")
-         collectionView.reloadData()
-//        dateChanged()
-//        updateVisibleCategories()
+        print("Категории после присваивания: \(categories)")
+        collectionView.reloadData()
     }
     
     func didUpdateCategories(inserted: Set<IndexPath>, deleted: Set<IndexPath>, updated: Set<IndexPath>) {
         loadCategories()
-        collectionView.performBatchUpdates {
-            collectionView.insertItems(at: Array(inserted))
-            collectionView.deleteItems(at: Array(deleted))
-            collectionView.reloadItems(at: Array(updated))
-        }
         updateVisibleCategories()
         collectionView.reloadData()
     }

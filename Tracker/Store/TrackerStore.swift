@@ -48,16 +48,14 @@ final class TrackerStore: NSObject, NSFetchedResultsControllerDelegate {
         trackerCoreData.name = tracker.name
         trackerCoreData.color = colorString
         trackerCoreData.emoji = tracker.emoji
-        print("🟡 Исходное schedule перед трансформацией: \(tracker.schedule)")
+        print("updateTrackers - Исходное schedule перед трансформацией: \(tracker.schedule)")
         if let transformedSchedule = DaysValueTransformer().transformedValue(tracker.schedule) as? NSObject {
             trackerCoreData.schedule = transformedSchedule
-            print("✅ Успешно сохраненное schedule: \(transformedSchedule)")
+            print("updateTrackers - Успешно сохраненное schedule: \(transformedSchedule)")
         } else {
-            print("❌ Ошибка преобразования расписания! Schedule не сохранен")
+            print("updateTrackers - Ошибка преобразования расписания! Schedule не сохранен")
             trackerCoreData.schedule = nil
         }
-//        let scheduleStrings = tracker.schedule.compactMap { $0?.rawValue } 
-//            trackerCoreData.schedule = scheduleStrings.joined(separator: ",")
     }
     
     func fetchCategory(with title: String) throws -> TrackerCategoryCoreData? {

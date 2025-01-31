@@ -23,6 +23,7 @@ final class NewHabitOrEventViewController: UIViewController, ScheduleViewControl
     private var categoryTitle: String?
     private var emoji: String?
     private var color: UIColor?
+    private var previousText: String?
     
     private let emojis = [
         "🙂", "😻", "🌺", "🐶", "❤️", "😱", "😇", "😡", "🥶", "🤔", "🙌", "🍔", "🥦", "🏓", "🥇", "🎸", "🏝️", "😪" ]
@@ -287,6 +288,8 @@ extension NewHabitOrEventViewController: UITextFieldDelegate {
     }
     
     func textFieldDidChangeSelection(_ textField: UITextField) {
+        guard let text = textField.text, text != previousText else { return }
+        previousText = text
         validateCreateButtonState()
     }
     

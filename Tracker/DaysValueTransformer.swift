@@ -12,34 +12,41 @@ final class DaysValueTransformer: ValueTransformer {
     override class func allowsReverseTransformation() -> Bool { true }
     
     override func transformedValue(_ value: Any?) -> Any? {
+        print("DaysValueTransformer - Начальное значение \(String(describing: value))")
         guard let days = value as? [WeekDay] else {
-            print("Invalid value: \(String(describing: value))")
-            return nil
+            print("DaysValueTransformer - возвращаю без трансформации значение value: \(String(describing: value))")
+            return value
         }
-        return try? JSONEncoder().encode(days)
-//        guard let schedule = value as? [String] else { return nil }
-//        // Преобразуем массив строк в строку (например, через запятую)
-//        return schedule.joined(separator: ",")
-//        guard let schedule = value as? [String], !schedule.isEmpty else {
-//            // Если расписания нет или оно пустое, возвращаем nil (или пустую строку)
-//            return nil // или можно вернуть пустую строку ""
-//        }
-//        // Преобразуем массив строк в строку (например, через запятую)
-//        return schedule.joined(separator: ",")
+        print("DaysValueTransformer: Переменная расписание \(days)" )
+        do {
+             let encodedData = try JSONEncoder().encode(days)
+            print("DaysValueTransformer - Сереализованные данные: \(encodedData)" )
+             return encodedData
+         } catch {
+             print("DaysValueTransformer - Ошибка кодирования: \(error)")
+             return nil
+         }
     }
     
     override func reverseTransformedValue(_ value: Any?) -> Any? {
-        guard let data = value as? NSData else { return nil }
-        return try? JSONDecoder().decode([WeekDay].self, from: data as Data)
-//        guard let scheduleString = value as? String else { return nil }
-        // Преобразуем строку обратно в массив строк
-//        return scheduleString.split(separator: ",").map { String($0) }
-//        guard let scheduleString = value as? String, !scheduleString.isEmpty else {
-//            // Если строка пустая, возвращаем пустой массив
-//            return []
-//        }
-//        // Преобразуем строку обратно в массив строк
-//        return scheduleString.split(separator: ",").map { String($0) }
+        print("DaysValueTransformer reverse - Тип value из CoreData:", type(of: value))
+        guard let data = value as? NSData else {
+            print("Ошибка: scheduleData не NSData - возвращаю без декодирования значение value")
+            return value
+        }
+        if let jsonString = String(data: data as Data, encoding: .utf8) {
+              print("DaysValueTransformer reverse - JSON перед декодированием:", jsonString)
+          } else {
+              print("DaysValueTransformer reverse: ошибка - не удалось преобразовать в строку")
+          }
+        do {
+            let decodedDays = try JSONDecoder().decode([WeekDay].self, from: data as Data)
+            print("DaysValueTransformer reverse - Декодированные дни:", decodedDays)
+            return decodedDays
+        } catch {
+            print("DaysValueTransformer reverse - Ошибка декодирования: \(error)")
+            return nil
+        }
     }
     
     static func register() {

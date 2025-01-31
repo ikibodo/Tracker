@@ -55,7 +55,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         container.loadPersistentStores(completionHandler: { (storeDescription, error) in
             if let error = error as NSError? {
                 fatalError("Unresolved error \(error), \(error.userInfo)")
-//                print("Ошибка при загрузке persistent store: \(error), \(error.userInfo)")
             }
         })
         return container
