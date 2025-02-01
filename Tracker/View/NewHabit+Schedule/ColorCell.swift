@@ -7,7 +7,7 @@
 import Foundation
 import UIKit
 
-class ColorCell: UICollectionViewCell {
+final class ColorCell: UICollectionViewCell {
     static let reuseIdentifier = "ColorCell"
     
     private lazy var colorView: UIView = {

@@ -7,7 +7,7 @@
 import Foundation
 import UIKit
 
-class EmojiCell: UICollectionViewCell {
+final class EmojiCell: UICollectionViewCell {
     static let reuseIdentifier = "EmojiCell"
     
     private lazy var emojiLabel: UILabel = {

@@ -8,20 +8,14 @@ import Foundation
 import UIKit
 import CoreData
 
-enum TrackerCategoryStoreError: Error {
-    case missingTitle
-    case missingColor
-    case invalidSchedule
-}
-
 protocol TrackerCategoryStoreDelegate: AnyObject {
     func didUpdateCategories(inserted: Set<IndexPath>, deleted: Set<IndexPath>, updated: Set<IndexPath>)
 }
 
-final class TrackerCategoryStore: NSObject, NSFetchedResultsControllerDelegate {
+final class TrackerCategoryStore: NSObject {
     var trackersCategory: [TrackerCategory] {
         guard
-            let data = self.fetchedResultsController.fetchedObjects,
+            let data = self.fetchedResultsController?.fetchedObjects,
             let categories = try? data.map({ try self.getCategories(from: $0) })
         else { return [] }
         return categories
@@ -30,7 +24,7 @@ final class TrackerCategoryStore: NSObject, NSFetchedResultsControllerDelegate {
     weak var delegate: TrackerCategoryStoreDelegate?
     
     private let context: NSManagedObjectContext
-    private var fetchedResultsController: NSFetchedResultsController<TrackerCategoryCoreData>!
+    private var fetchedResultsController: NSFetchedResultsController<TrackerCategoryCoreData>?
     
     private var insertedIndexes: Set<IndexPath> = []
     private var deletedIndexes: Set<IndexPath> = []
@@ -47,10 +41,43 @@ final class TrackerCategoryStore: NSObject, NSFetchedResultsControllerDelegate {
     init(context: NSManagedObjectContext) {
         self.context = context
         super.init()
+        setupFetchedResultsController()
     }
     
-    func getCategories(from trackerCategoryStore: TrackerCategoryCoreData) throws -> TrackerCategory {
-        guard let title = trackerCategoryStore.title else { throw TrackerCategoryStoreError.missingTitle }
+    func fetchAllCategories() throws -> [TrackerCategory] {
+        let fetchRequest: NSFetchRequest<TrackerCategoryCoreData> = TrackerCategoryCoreData.fetchRequest()
+        let result = try context.fetch(fetchRequest)
+
+        return result.compactMap { trackerCategoryCoreData in
+            do {
+                return try getCategories(from: trackerCategoryCoreData)
+            } catch {
+                print("Ошибка при создании Tracker в TrackerStore: \(error)")
+                return nil
+            }
+        }
+    }
+    
+    func addCategory(_ category: TrackerCategory) throws {
+        let categoryEntity = TrackerCategoryCoreData(context: context)
+        categoryEntity.title = category.title
+        categoryEntity.tracker = NSSet(array: category.trackers.map { mapToCoreData($0) })
+        saveContext()
+    }
+    
+    func deleteCategory(_ category: TrackerCategory) throws {
+        let fetchRequest: NSFetchRequest<TrackerCategoryCoreData> = TrackerCategoryCoreData.fetchRequest()
+        fetchRequest.predicate = NSPredicate(format: "title == %@", category.title)
+        
+        guard let categoryToDelete = try context.fetch(fetchRequest).first else { return }
+        context.perform {
+            self.context.delete(categoryToDelete)
+            self.saveContext()
+        }
+    }
+    
+    private func getCategories(from trackerCategoryStore: TrackerCategoryCoreData) throws -> TrackerCategory {
+        guard let title = trackerCategoryStore.title else { throw TrackerStoreError.missingTitle }
         var trackers: [Tracker] = []
         
         guard let trackerSet = trackerCategoryStore.tracker as? Set<TrackerCoreData> else {
@@ -68,10 +95,30 @@ final class TrackerCategoryStore: NSObject, NSFetchedResultsControllerDelegate {
         return TrackerCategory(title: title, trackers: trackers)
     }
     
+    private func mapToCoreData(_ tracker: Tracker) -> TrackerCoreData {
+        guard let (colorString, _) = colorDictionary.first(where: { $0.value == tracker.color }) else {
+            fatalError("Не удалось найти строковое представление для цвета \(tracker.color)")
+        }
+        
+        let trackerEntity = TrackerCoreData(context: context)
+        trackerEntity.id = tracker.id
+        trackerEntity.name = tracker.name
+        trackerEntity.color = colorString
+        trackerEntity.emoji = tracker.emoji
+        if let transformedSchedule = DaysValueTransformer().transformedValue(tracker.schedule) as? NSObject {
+            trackerEntity.schedule = transformedSchedule
+            print("mapToCoreData - Успешно сохраненное schedule: \(transformedSchedule)")
+        } else {
+            print("mapToCoreData - Ошибка преобразования расписания! Schedule не сохранен")
+            trackerEntity.schedule = nil
+        }
+        return trackerEntity
+    }
+    
     private func createTracker(from trackerCoreData: TrackerCoreData) throws -> Tracker {
         guard let id = trackerCoreData.id ?? UUID() as UUID?,
               let name = trackerCoreData.name else {
-            throw TrackerCategoryStoreError.missingTitle
+            throw TrackerStoreError.missingTitle
         }
         
         let color: UIColor
@@ -93,35 +140,22 @@ final class TrackerCategoryStore: NSObject, NSFetchedResultsControllerDelegate {
         return Tracker(id: id, name: name, color: color, emoji: emoji, schedule: schedule)
     }
     
-    func setupFetchedResultsController() {
+    private func setupFetchedResultsController() {
         let fetchRequest: NSFetchRequest<TrackerCategoryCoreData> = TrackerCategoryCoreData.fetchRequest()
         fetchRequest.sortDescriptors = [NSSortDescriptor(key: "title", ascending: true)]
         
-        fetchedResultsController = NSFetchedResultsController(
+        let controller = NSFetchedResultsController(
             fetchRequest: fetchRequest,
             managedObjectContext: context,
             sectionNameKeyPath: nil,
             cacheName: nil
         )
-        fetchedResultsController.delegate = self
-        
+        controller.delegate = self
+        self.fetchedResultsController = controller
         do {
-            try fetchedResultsController?.performFetch()
+            try controller.performFetch()
         } catch {
             print("Failed to fetch categories: \(error)")
-        }
-    }
-    
-    func fetchAllCategories() throws -> [TrackerCategoryCoreData] {
-        let fetchRequest: NSFetchRequest<TrackerCategoryCoreData> = TrackerCategoryCoreData.fetchRequest()
-        let result = try context.fetch(fetchRequest)
-        return result
-    }
-    
-    func deleteCategory(_ category: TrackerCategoryCoreData) {
-        context.perform {
-            self.context.delete(category)
-            self.saveContext()
         }
     }
     
@@ -133,7 +167,9 @@ final class TrackerCategoryStore: NSObject, NSFetchedResultsControllerDelegate {
             print("Failed to save context: \(error)")
         }
     }
-    
+}
+
+extension  TrackerCategoryStore: NSFetchedResultsControllerDelegate {
     func controllerWillChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
         insertedIndexes.removeAll()
         deletedIndexes.removeAll()

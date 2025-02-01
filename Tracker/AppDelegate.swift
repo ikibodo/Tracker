@@ -77,6 +77,5 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     
     func applicationWillTerminate(_ application: UIApplication) {
         (UIApplication.shared.delegate as? AppDelegate)?.saveContext()
-//        saveContext()
     }
 }

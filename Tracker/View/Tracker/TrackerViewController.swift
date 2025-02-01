@@ -141,8 +141,8 @@ final class TrackersViewController: UIViewController {
         collectionView.delegate = self
         
         trackerCategoryStore.delegate = self
-        trackerCategoryStore.setupFetchedResultsController()
-        //      categories = MockData.mockData
+//      trackerCategoryStore.setupFetchedResultsController()
+//      categories = MockData.mockData
         
         navigationBar()
         addSubViews()
@@ -154,7 +154,7 @@ final class TrackersViewController: UIViewController {
         
         loadCategories()
         dateChanged()
-        //      deleteAllData()
+//      deleteAllData()
     }
     
     private func addSubViews() {
@@ -323,7 +323,7 @@ extension TrackersViewController: UICollectionViewDelegate, UICollectionViewData
     
     private func isSameTrackerRecord(trackerRecord: TrackerRecord, id: UUID) -> Bool {
         do {
-            return try trackerRecordStore.fetchRecord(id: id, date: datePicker.date) != nil
+            return try trackerRecordStore.isRecordExists(id: id, date: datePicker.date) != nil
         } catch {
             print("Ошибка при проверке записи трекера: \(error)")
             return false
@@ -425,7 +425,10 @@ extension TrackersViewController: TrackerCategoryStoreDelegate {
         do {
             let recordsToDelete = try trackerRecordStore.fetchAllRecords()
             for record in recordsToDelete {
-                try trackerRecordStore.deleteRecord(id: record.id!, date: record.date!)
+                let id = record.id
+                let date = record.date
+                try trackerRecordStore.deleteRecord(id: id, date: date)
+                print("🗑 trackerRecordStore - deleteAllData")
             }
         } catch {
             print("Ошибка при удалении записей: \(error)")
@@ -434,7 +437,8 @@ extension TrackersViewController: TrackerCategoryStoreDelegate {
         do {
             let trackersToDelete = try trackerStore.fetchAllTrackers()
             for tracker in trackersToDelete {
-                trackerStore.deleteTracker(tracker)
+                try trackerStore.deleteTracker(tracker)
+                print("🗑 trackerStore - deleteAllData")
             }
         } catch {
             print("Ошибка при удалении трекеров: \(error)")
@@ -443,7 +447,8 @@ extension TrackersViewController: TrackerCategoryStoreDelegate {
         do {
             let categoriesToDelete = try trackerCategoryStore.fetchAllCategories()
             for category in categoriesToDelete {
-                trackerCategoryStore.deleteCategory(category)
+                try trackerCategoryStore.deleteCategory(category)
+                print("🗑 trackerCategoryStore - deleteAllData")
             }
         } catch {
             print("Ошибка при удалении категорий: \(error)")
