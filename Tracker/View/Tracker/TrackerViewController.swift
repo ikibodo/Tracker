@@ -17,6 +17,10 @@ final class TrackersViewController: UIViewController {
     private var countDays: Int = 0
     private var currentDate: Date = Date()
     
+    private let trackerStore = TrackerStore()
+    private let trackerCategoryStore = TrackerCategoryStore()
+    private let trackerRecordStore = TrackerRecordStore()
+    
     private struct cellParams {
         let cellCount: Int
         let leftInset: CGFloat
@@ -98,7 +102,6 @@ final class TrackersViewController: UIViewController {
         datePicker.datePickerMode = .date
         let localID = Locale.preferredLanguages.first ?? "ru_RU"
         datePicker.locale = Locale(identifier: localID)
-        //        datePicker.maximumDate = Date() // Второй вариант с ограничением дат, интуитивно понятнее пользователю блок, но не дающий посмотреть что в следующие дни предстоит.Хотя вариате что есть сейчас алерта (не предусмотрен макетом) явно не хватает чтобы уведомить пользователя, почему нельзя нажать на кнопку.
         datePicker.translatesAutoresizingMaskIntoConstraints = false
         datePicker.addTarget(self, action: #selector(dateChanged), for: .valueChanged)
         return datePicker
@@ -134,12 +137,12 @@ final class TrackersViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .ypWhite
-        
         collectionView.dataSource = self
         collectionView.delegate = self
         
-        categories = MockData.mockData // mockData убрать в следующих спринтах
-        dateChanged()
+        trackerCategoryStore.delegate = self
+//      trackerCategoryStore.setupFetchedResultsController()
+//      categories = MockData.mockData
         
         navigationBar()
         addSubViews()
@@ -148,6 +151,10 @@ final class TrackersViewController: UIViewController {
         
         newHabitOrEventViewController = NewHabitOrEventViewController()
         newHabitOrEventViewController.delegate = self
+        
+        loadCategories()
+        dateChanged()
+//      deleteAllData()
     }
     
     private func addSubViews() {
@@ -164,7 +171,7 @@ final class TrackersViewController: UIViewController {
         NSLayoutConstraint.activate([
             descriptionLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 1),
             descriptionLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
-
+            
             searchTextField.topAnchor.constraint(equalTo: descriptionLabel.bottomAnchor, constant: 7),
             searchTextField.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
             searchTextField.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
@@ -221,19 +228,21 @@ final class TrackersViewController: UIViewController {
     private func updateVisibleCategories() {
         let calendar = Calendar.current
         let selectedDayIndex = calendar.component(.weekday, from: currentDate)
-        guard let selectedWeekDay = WeekDay.from(weekdayIndex: selectedDayIndex) else { return }
+        print("Update Visible Categories: selectedDayIndex: \(selectedDayIndex)")
         
+        guard let selectedWeekDay = WeekDay.from(weekdayIndex: selectedDayIndex) else { return }
+        loadCategories()
         visibleCategories = categories.compactMap { category in
             let trackers = category.trackers.filter { tracker in
-                print("Проверка трекера: \(tracker.name)")
+                print("Update Visible Categories: Проверка трекера: \(tracker.name)")
                 if tracker.schedule.isEmpty {
-                    print("Трекер без расписания: \(tracker.name)")
+                    print("Update Visible Categories: Трекер без расписания: \(tracker.name)")
                     return true
                 } else {
                     let containsWeekDay = tracker.schedule.contains { weekDay in
                         weekDay == selectedWeekDay
                     }
-                    print("Трекер содержит \(selectedWeekDay): \(containsWeekDay)")
+                    print("Update Visible Categories: Трекер содержит \(selectedWeekDay): \(containsWeekDay)")
                     return containsWeekDay
                 }
             }
@@ -244,7 +253,7 @@ final class TrackersViewController: UIViewController {
             )
         }
         if visibleCategories.isEmpty {
-            print("Видимые категории: \(visibleCategories)")
+            print("Update Visible Categories: Видимые категории: \(visibleCategories)")
             showErrorImage(true)
         } else {
             showErrorImage(false)
@@ -282,6 +291,10 @@ extension TrackersViewController: UICollectionViewDelegate, UICollectionViewData
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        guard indexPath.section < visibleCategories.count else {
+            print("Ошибка: indexPath.section (\(indexPath.section)) выходит за пределы visibleCategories (\(visibleCategories.count))")
+            return UICollectionViewCell()
+        }
         guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "cell", for: indexPath) as? TrackerCell else { return UICollectionViewCell() }
         
         let tracker = visibleCategories[indexPath.section].trackers[indexPath.row]
@@ -291,7 +304,7 @@ extension TrackersViewController: UICollectionViewDelegate, UICollectionViewData
         cell.delegate = self
         
         let currentDate = datePicker.date
-        let completedDay = completedTrackers.filter{ $0.id == tracker.id }.count
+        let completedDay = (try? trackerRecordStore.completedDays(for: tracker.id).count) ?? 0
         cell.configure(with: tracker.name, date: currentDate)
         cell.setupCell(with: tracker, indexPath: indexPath, completedDay: completedDay, isCompletedToday: isCompletedToday)
         print("Создана ячейка для секции \(indexPath.section), элемента \(indexPath.row), с трекером \(tracker.name)")
@@ -299,36 +312,48 @@ extension TrackersViewController: UICollectionViewDelegate, UICollectionViewData
     }
     
     private func isTrackerCompletedToday(id: UUID) -> Bool {
-        completedTrackers.contains { trackerRecord in
-            isSameTrackerRecord(trackerRecord: trackerRecord, id: id)
+        do {
+            let completedDates = try trackerRecordStore.completedDays(for: id)
+            return completedDates.contains { Calendar.current.isDate($0, inSameDayAs: datePicker.date) }
+        } catch {
+            print("Ошибка при получении выполненных дней трекера: \(error)")
+            return false
         }
     }
     
     private func isSameTrackerRecord(trackerRecord: TrackerRecord, id: UUID) -> Bool {
-        let isSomeDay = Calendar.current.isDate(trackerRecord.date, inSameDayAs: datePicker.date)
-        return trackerRecord.id == id && isSomeDay
+        do {
+            return try trackerRecordStore.isRecordExists(id: id, date: datePicker.date) != nil
+        } catch {
+            print("Ошибка при проверке записи трекера: \(error)")
+            return false
+        }
     }
 }
 
 extension TrackersViewController: TrackerCellDelegate {
     func completeTracker(id: UUID, at indexPath: IndexPath) {
         let todayDate = Date()
-        guard datePicker.date <= todayDate else {
+        guard currentDate <= todayDate else {
             print("Ошибка: нельзя отметить трекер для будущей даты \(datePicker.date)")
             return
         }
-        
-        let trackerRecord = TrackerRecord(id: id, date: datePicker.date)
-        print("Выполнен трекер с id \(id) о чем создана запись \(trackerRecord.date)")
-        completedTrackers.append(trackerRecord)
+        do {
+            try trackerRecordStore.updateRecord(id: id, date: datePicker.date)
+            print("Выполнен трекер с id \(id) о чем создана запись \(datePicker.date)")
+        } catch {
+            print("Ошибка при обновлении записи в CoreData: \(error)")
+        }
         collectionView.reloadItems(at: [indexPath])
     }
     
     func uncompleteTracker(id: UUID, at indexPath: IndexPath) {
-        completedTrackers.removeAll() { trackerRecord in
-            isSameTrackerRecord(trackerRecord: trackerRecord, id: id)
+        do {
+            try trackerRecordStore.deleteRecord(id: id, date: datePicker.date)
+            print("Отмена выполнения трекера с id \(id) - запись удалена")
+        } catch {
+            print("Ошибка при удалении записи из CoreData: \(error)")
         }
-        print("Отмена выполнения трекера с id \(id) - запись о нем удалена")
         collectionView.reloadItems(at: [indexPath])
     }
 }
@@ -369,29 +394,66 @@ extension TrackersViewController: UICollectionViewDelegateFlowLayout {
 
 extension TrackersViewController: NewHabitOrEventViewControllerDelegate {
     func addTracker(_ tracker: Tracker, to category: TrackerCategory) {
-        var addedToCategory = category.title
-        if let categoryIndex = categories.firstIndex(where: { $0.title == category.title }) {
-            updateCategory(at: categoryIndex, with: tracker)
-        } else {
-            addToDefaultCategory(tracker)
-            addedToCategory = "Новая категория"
+        do {
+            try trackerStore.addTracker(tracker, with: category)
+            print("Трекер \(tracker.name) добавлен в категорию: \(category.title)")
+            dateChanged()
+        } catch {
+            print("Ошибка при добавлении трекера: \(error.localizedDescription)")
         }
-        trackers.append(tracker)
-        print("Трекер \(tracker.name) добавлен в категорию: \(addedToCategory)")
-        dateChanged()
+    }
+}
+
+extension TrackersViewController: TrackerCategoryStoreDelegate {
+    private func loadCategories() {
+        print("Загруженные начальные категории: \(trackerCategoryStore.trackersCategory)")
+        if trackerCategoryStore.trackersCategory.isEmpty {
+            print("Категории пусты")
+        }
+        categories = trackerCategoryStore.trackersCategory
+        print("Категории после присваивания: \(categories)")
+        collectionView.reloadData()
     }
     
-    private func updateCategory(at index: Int, with tracker: Tracker) {
-        var updatedTrackers = categories[index].trackers
-        updatedTrackers.append(tracker)
-        categories[index] = TrackerCategory(title: categories[index].title, trackers: updatedTrackers)
+    func didUpdateCategories(inserted: Set<IndexPath>, deleted: Set<IndexPath>, updated: Set<IndexPath>) {
+        loadCategories()
+        updateVisibleCategories()
+        collectionView.reloadData()
     }
     
-    private func addToDefaultCategory(_ tracker: Tracker) {
-        if let defaultIndex = categories.firstIndex(where: { $0.title == "Домашний уют" }) {
-            updateCategory(at: defaultIndex, with: tracker)
-        } else {
-            categories.append(TrackerCategory(title: "Новая категория", trackers: [tracker]))
+    func deleteAllData() {
+        do {
+            let recordsToDelete = try trackerRecordStore.fetchAllRecords()
+            for record in recordsToDelete {
+                let id = record.id
+                let date = record.date
+                try trackerRecordStore.deleteRecord(id: id, date: date)
+                print("🗑 trackerRecordStore - deleteAllData")
+            }
+        } catch {
+            print("Ошибка при удалении записей: \(error)")
         }
+        
+        do {
+            let trackersToDelete = try trackerStore.fetchAllTrackers()
+            for tracker in trackersToDelete {
+                try trackerStore.deleteTracker(tracker)
+                print("🗑 trackerStore - deleteAllData")
+            }
+        } catch {
+            print("Ошибка при удалении трекеров: \(error)")
+        }
+        
+        do {
+            let categoriesToDelete = try trackerCategoryStore.fetchAllCategories()
+            for category in categoriesToDelete {
+                try trackerCategoryStore.deleteCategory(category)
+                print("🗑 trackerCategoryStore - deleteAllData")
+            }
+        } catch {
+            print("Ошибка при удалении категорий: \(error)")
+        }
+        categories.removeAll()
+        collectionView.reloadData()
     }
 }
