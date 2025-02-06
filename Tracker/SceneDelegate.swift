@@ -8,56 +8,45 @@
 import UIKit
 
 class SceneDelegate: UIResponder, UIWindowSceneDelegate {
-
+    
     var window: UIWindow?
-
-
+    
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
         guard let windowScene = (scene as? UIWindowScene) else { return }
-
-        let trackersViewController = TrackersViewController()
-        let trackersNavigationController = UINavigationController(rootViewController: trackersViewController)
-        trackersNavigationController.tabBarItem = UITabBarItem(
-            title: "Трекеры",
-            image: UIImage(named: "Disc"),
-            tag: 0)
         
-
-        let statisticsViewController = StatisticsViewController()
-        let statisticsNavigationController = UINavigationController(rootViewController: statisticsViewController)
-        statisticsNavigationController.tabBarItem = UITabBarItem(
-            title: "Статистика",
-            image: UIImage(named: "Rabbit"),
-            tag: 1)
+        let hasSeenOnboarding = UserDefaults.standard.bool(forKey: "hasSeenOnboarding")
+        let rootViewController: UIViewController
         
-
-        let tabBarController = TabBarViewController()
-        tabBarController.viewControllers = [trackersNavigationController, statisticsNavigationController]
+        if hasSeenOnboarding {
+            rootViewController = TabBarViewController()
+        } else {
+            let onboardingViewController = OnboardingViewController(transitionStyle: .scroll, navigationOrientation: .horizontal)
+            rootViewController = onboardingViewController
+        }
         
-
         window = UIWindow(windowScene: windowScene)
-        window?.rootViewController = tabBarController
+        window?.rootViewController = rootViewController
         window?.makeKeyAndVisible()
     }
-
-    func sceneDidDisconnect(_ scene: UIScene) {
     
+    func sceneDidDisconnect(_ scene: UIScene) {
+        
     }
-
+    
     func sceneDidBecomeActive(_ scene: UIScene) {
-
+        
     }
-
+    
     func sceneWillResignActive(_ scene: UIScene) {
-
+        
     }
-
+    
     func sceneWillEnterForeground(_ scene: UIScene) {
-
+        
     }
-
+    
     func sceneDidEnterBackground(_ scene: UIScene) {
-
+        
         (UIApplication.shared.delegate as? AppDelegate)?.saveContext()
     }
 }
