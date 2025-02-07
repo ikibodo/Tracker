@@ -92,7 +92,7 @@ final class PageViewController: UIViewController {
             
             pageControl.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             pageControl.bottomAnchor.constraint(equalTo: onboardingButton.topAnchor, constant: -24),
-
+            
             onboardingButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             onboardingButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             onboardingButton.trailingAnchor.constraint(equalTo: view.leadingAnchor, constant: -20),
@@ -114,7 +114,7 @@ final class PageViewController: UIViewController {
     }
     
     @objc private func onboardingButtonTapped() {
-        print("Нажата onboardingButtonTapped - онбординг закрывается и больше не должен быть показан")
+        print("🔘 Tapped onboardingButtonTapped - онбординг закрывается и больше не должен быть показан")
         UserDefaults.standard.set(true, forKey: "hasSeenOnboarding")
         didFinishOnboarding?()
     }

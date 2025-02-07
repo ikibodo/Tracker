@@ -212,7 +212,7 @@ final class TrackersViewController: UIViewController {
     
     @objc
     private func didTapPlusButton() {
-        print("Кнопка плюс нажата и открывается страница выбора типа трекера")
+        print("🔘 Tapped + и открывается страница выбора типа трекера")
         let viewController = TrackerTypeViewController()
         viewController.delegate = self
         let navigationController = UINavigationController(rootViewController: viewController)
