@@ -77,10 +77,18 @@ final class CategoryViewController: UIViewController {
         view.backgroundColor = .ypWhite
         tableView.delegate = self
         tableView.dataSource = self
+        setupBindings()
         navigationBar()
-        showContentOrPlaceholder()
         addSubViews()
         addConstraints()
+    }
+    
+    private func setupBindings() {
+        categoryViewModel.onCategoriesUpdated = { [weak self] categories in
+            self?.tableView.reloadData()
+            self?.updateTableViewHeight()
+            self?.showContentOrPlaceholder()
+        }
     }
     
     private func navigationBar() {
@@ -186,7 +194,10 @@ extension CategoryViewController: UITableViewDelegate, UITableViewDataSource {
         let categoryName = categoryViewModel.getCategories()[indexPath.row]
         categoryViewModel.selectCategory(categoryName)
         delegate?.didSelectCategory(categoryName)
-        dismiss(animated: true, completion: nil)
+        tableView.reloadData()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            self.dismiss(animated: true, completion: nil)
+        }
     }
 }
 

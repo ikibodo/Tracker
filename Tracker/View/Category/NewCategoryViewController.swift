@@ -86,7 +86,7 @@ final class NewCategoryViewController: UIViewController {
             
             categoryButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             categoryButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            categoryButton.trailingAnchor.constraint(equalTo: view.leadingAnchor, constant: -20),
+            categoryButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
             categoryButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -16),
             categoryButton.heightAnchor.constraint(equalToConstant: 60)
         ])}

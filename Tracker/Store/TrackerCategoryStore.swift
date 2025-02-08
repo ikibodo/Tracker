@@ -44,6 +44,10 @@ final class TrackerCategoryStore: NSObject {
         setupFetchedResultsController()
     }
     
+    func setDelegate(_ delegate: TrackerCategoryStoreDelegate) {
+        self.delegate = delegate
+    }
+
     func fetchAllCategories() throws -> [TrackerCategory] {
         let fetchRequest: NSFetchRequest<TrackerCategoryCoreData> = TrackerCategoryCoreData.fetchRequest()
         let result = try context.fetch(fetchRequest)

@@ -95,7 +95,7 @@ final class PageViewController: UIViewController {
             
             onboardingButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             onboardingButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            onboardingButton.trailingAnchor.constraint(equalTo: view.leadingAnchor, constant: -20),
+            onboardingButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
             onboardingButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -50),
             onboardingButton.heightAnchor.constraint(equalToConstant: 60)
         ])}
