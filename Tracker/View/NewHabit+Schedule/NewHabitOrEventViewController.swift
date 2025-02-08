@@ -153,7 +153,7 @@ final class NewHabitOrEventViewController: UIViewController, ScheduleViewControl
         collectionView.delegate = self
         collectionView.dataSource = self
         
-        navigationBar()
+        setupNavigationBar()
         updateNavigationBarTitle(forItems: currentItems)
         addSubViews()
         addConstraints()
@@ -176,7 +176,7 @@ final class NewHabitOrEventViewController: UIViewController, ScheduleViewControl
         navigationBar.topItem?.titleView = titleLabel
     }
     
-    private func navigationBar() {
+    private func setupNavigationBar() {
         guard let navigationBar = navigationController?.navigationBar else { return }
         navigationBar.topItem?.titleView = titleLabel
     }
@@ -319,7 +319,10 @@ extension NewHabitOrEventViewController: UITableViewDataSource{
         switch indexPath.row {
         case 0:
             print("🔘 Tapped Категория")
-            let categoryViewController = CategoryViewController()
+//            let categoryViewController = CategoryViewController()
+            let categoryViewModel = CategoryViewModelFactory.createCategoryViewModel()
+            let categoryViewController = CategoryViewController(categoryViewModel: categoryViewModel)
+            
             categoryViewController.delegate = self
             let navigationController = UINavigationController(rootViewController: categoryViewController)
             navigationController.modalPresentationStyle = .pageSheet

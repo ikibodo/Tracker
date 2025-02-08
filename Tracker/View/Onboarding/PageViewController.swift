@@ -7,8 +7,8 @@
 import UIKit
 
 enum PageType: Int {
-    case first = 0
-    case second = 1
+    case first
+    case second
 }
 
 final class PageViewController: UIViewController {

@@ -4,7 +4,6 @@
 //
 //  Created by N L on 26.12.24..
 //
-
 import UIKit
 import CoreData
 

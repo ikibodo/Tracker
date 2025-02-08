@@ -4,7 +4,6 @@
 //
 //  Created by N L on 6.2.25..
 //
-import Foundation
 import UIKit
 
 protocol CategoryViewControllerDelegate: AnyObject {
@@ -15,7 +14,17 @@ final class CategoryViewController: UIViewController {
     
     weak var delegate: CategoryViewControllerDelegate?
     
-    private var categoryViewModel = CategoryViewModel()
+//    private var categoryViewModel = CategoryViewModel()
+    private var categoryViewModel: CategoryViewModel
+    
+    init(categoryViewModel: CategoryViewModel) {
+        self.categoryViewModel = categoryViewModel
+        super.init(nibName: nil, bundle: nil)
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
     
     private lazy var titleLabel: UILabel = {
         let label = UILabel()
@@ -78,7 +87,7 @@ final class CategoryViewController: UIViewController {
         tableView.delegate = self
         tableView.dataSource = self
         setupBindings()
-        navigationBar()
+        setupNavigationBar()
         addSubViews()
         addConstraints()
     }
@@ -91,7 +100,7 @@ final class CategoryViewController: UIViewController {
         }
     }
     
-    private func navigationBar() {
+    private func setupNavigationBar() {
         guard let navigationBar = navigationController?.navigationBar else { return }
         navigationBar.topItem?.titleView = titleLabel
     }
@@ -187,7 +196,7 @@ extension CategoryViewController: UITableViewDelegate, UITableViewDataSource {
     }
     
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        return 75
+        75
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {

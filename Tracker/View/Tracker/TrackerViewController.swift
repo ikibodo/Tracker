@@ -144,7 +144,7 @@ final class TrackersViewController: UIViewController {
 //      trackerCategoryStore.setupFetchedResultsController()
 //      categories = MockData.mockData
         
-        navigationBar()
+        setupNavigationBar()
         addSubViews()
         addConstraints()
         showContentOrPlaceholder()
@@ -189,7 +189,7 @@ final class TrackersViewController: UIViewController {
         ])
     }
     
-    private func navigationBar() {
+    private func setupNavigationBar() {
         navigationController?.setNavigationBarHidden(false, animated: false)
         guard (navigationController?.navigationBar) != nil else { return }
         navigationItem.leftBarButtonItem = UIBarButtonItem(customView: plusButton)
