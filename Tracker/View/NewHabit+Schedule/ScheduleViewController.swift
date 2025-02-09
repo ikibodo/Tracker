@@ -60,12 +60,12 @@ final class ScheduleViewController: UIViewController {
         view.backgroundColor = .ypWhite
         scheduleView.delegate = self
         scheduleView.dataSource = self
-        navigationBar()
+        setupNavigationBar()
         addSubview()
         addConstraints()
     }
     
-    private func navigationBar() {
+    private func setupNavigationBar() {
         guard let navigationBar = navigationController?.navigationBar else { return }
         navigationBar.topItem?.titleView = titleLabel
     }

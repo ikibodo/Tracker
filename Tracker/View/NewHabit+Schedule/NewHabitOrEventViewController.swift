@@ -153,7 +153,7 @@ final class NewHabitOrEventViewController: UIViewController, ScheduleViewControl
         collectionView.delegate = self
         collectionView.dataSource = self
         
-        navigationBar()
+        setupNavigationBar()
         updateNavigationBarTitle(forItems: currentItems)
         addSubViews()
         addConstraints()
@@ -176,7 +176,7 @@ final class NewHabitOrEventViewController: UIViewController, ScheduleViewControl
         navigationBar.topItem?.titleView = titleLabel
     }
     
-    private func navigationBar() {
+    private func setupNavigationBar() {
         guard let navigationBar = navigationController?.navigationBar else { return }
         navigationBar.topItem?.titleView = titleLabel
     }
@@ -268,7 +268,7 @@ final class NewHabitOrEventViewController: UIViewController, ScheduleViewControl
             trackers: [newTracker])
         delegate?.addTracker(newTracker, to: categoryTracker)
         presentingViewController?.presentingViewController?.dismiss(animated: true)
-        print("Создать нажато и создается трекер")
+        print("🔘 Tapped Создать и в категорию: \(categoryTracker.title) добавляется трекер: \(newTracker.name) ")
     }
     
     @objc
@@ -279,7 +279,7 @@ final class NewHabitOrEventViewController: UIViewController, ScheduleViewControl
 
 extension NewHabitOrEventViewController: UITextFieldDelegate {
     func textFieldDidBeginEditing(_ textField: UITextField) {
-        print("Пользователь начал редактировать поле")
+        print("✍️ Пользователь начал редактировать поле")
     }
     
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
@@ -303,6 +303,13 @@ extension NewHabitOrEventViewController: UITextFieldDelegate {
     }
 }
 
+extension NewHabitOrEventViewController: CategoryViewControllerDelegate {
+    func didSelectCategory(_ category: String) {
+        self.categoryTitle = category
+        trackerItems.reloadData()
+    }
+}
+
 extension NewHabitOrEventViewController: UITableViewDataSource{
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         return 75
@@ -311,10 +318,17 @@ extension NewHabitOrEventViewController: UITableViewDataSource{
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         switch indexPath.row {
         case 0:
-            print("Категория нажата")
-            // TODO - добавить логику для выбора категории
+            print("🔘 Tapped Категория")
+//            let categoryViewController = CategoryViewController()
+            let categoryViewModel = CategoryViewModelFactory.createCategoryViewModel()
+            let categoryViewController = CategoryViewController(categoryViewModel: categoryViewModel)
+            
+            categoryViewController.delegate = self
+            let navigationController = UINavigationController(rootViewController: categoryViewController)
+            navigationController.modalPresentationStyle = .pageSheet
+            present(navigationController, animated: true)
         case 1:
-            print("Расписание нажато")
+            print("🔘 Tapped Расписание")
             let scheduleViewController = ScheduleViewController()
             scheduleViewController.delegate = self
             scheduleViewController.loadSelectedSchedule(from: schedule)
@@ -340,9 +354,15 @@ extension NewHabitOrEventViewController: UITableViewDelegate{
         cell.textLabel?.font = UIFont.systemFont(ofSize: 17, weight: .regular)
         cell.textLabel?.textColor = .ypBlack
         
+        if indexPath.row == 0 {
+            cell.detailTextLabel?.text = categoryTitle ?? ""
+            cell.detailTextLabel?.textColor = .ypGray
+            cell.detailTextLabel?.font = UIFont.systemFont(ofSize: 17)
+        }
+        
         if indexPath.row == 1, currentItems.contains("Расписание") {
             let shortWeekDays = schedule.compactMap { $0?.shortWeekDay }
-            print("Краткие дни недели: \(shortWeekDays)")
+            print("Отображено расписание - краткие дни недели: \(shortWeekDays)")
             cell.detailTextLabel?.text = shortWeekDays.isEmpty ? "" : shortWeekDays.joined(separator: ", ")
             cell.detailTextLabel?.text = shortWeekDays.joined(separator: ", ")
             cell.detailTextLabel?.textColor = .ypGray

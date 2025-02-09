@@ -4,7 +4,6 @@
 //
 //  Created by N L on 24.1.25..
 //
-import Foundation
 import UIKit
 import CoreData
 
@@ -44,6 +43,10 @@ final class TrackerCategoryStore: NSObject {
         setupFetchedResultsController()
     }
     
+    func setDelegate(_ delegate: TrackerCategoryStoreDelegate) {
+        self.delegate = delegate
+    }
+
     func fetchAllCategories() throws -> [TrackerCategory] {
         let fetchRequest: NSFetchRequest<TrackerCategoryCoreData> = TrackerCategoryCoreData.fetchRequest()
         let result = try context.fetch(fetchRequest)

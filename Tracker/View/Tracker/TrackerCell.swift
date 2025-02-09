@@ -4,7 +4,6 @@
 //
 //  Created by N L on 6.1.25..
 //
-import Foundation
 import UIKit
 
 protocol TrackerCellDelegate: AnyObject {

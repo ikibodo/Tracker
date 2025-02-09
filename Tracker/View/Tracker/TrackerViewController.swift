@@ -144,7 +144,7 @@ final class TrackersViewController: UIViewController {
 //      trackerCategoryStore.setupFetchedResultsController()
 //      categories = MockData.mockData
         
-        navigationBar()
+        setupNavigationBar()
         addSubViews()
         addConstraints()
         showContentOrPlaceholder()
@@ -189,7 +189,7 @@ final class TrackersViewController: UIViewController {
         ])
     }
     
-    private func navigationBar() {
+    private func setupNavigationBar() {
         navigationController?.setNavigationBarHidden(false, animated: false)
         guard (navigationController?.navigationBar) != nil else { return }
         navigationItem.leftBarButtonItem = UIBarButtonItem(customView: plusButton)
@@ -212,7 +212,7 @@ final class TrackersViewController: UIViewController {
     
     @objc
     private func didTapPlusButton() {
-        print("Кнопка плюс нажата и открывается страница выбора типа трекера")
+        print("🔘 Tapped + и открывается страница выбора типа трекера")
         let viewController = TrackerTypeViewController()
         viewController.delegate = self
         let navigationController = UINavigationController(rootViewController: viewController)
