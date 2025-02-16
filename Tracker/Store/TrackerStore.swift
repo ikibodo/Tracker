@@ -47,14 +47,17 @@ final class TrackerStore: NSObject, NSFetchedResultsControllerDelegate {
         }
     }
     
-    func deleteTracker(_ tracker: Tracker) throws {
+    func deleteTracker(id: UUID) throws {
         let fetchRequest: NSFetchRequest<TrackerCoreData> = TrackerCoreData.fetchRequest()
-        fetchRequest.predicate = NSPredicate(format: "id == %@", tracker.id as CVarArg)
-        guard let trackerToDelete = try context.fetch(fetchRequest).first else { return }
-            context.perform {
-                self.context.delete(trackerToDelete)
-                self.saveContext()
-            }
+        fetchRequest.predicate = NSPredicate(format: "id == %@", id as CVarArg)
+        
+        guard let trackerToDelete = try context.fetch(fetchRequest).first else {
+            throw NSError(domain: "TrackerStoreError", code: 404, userInfo: [NSLocalizedDescriptionKey: "Трекер с id \(id) не найден"])
+        }
+        context.perform {
+            self.context.delete(trackerToDelete)
+            self.saveContext()
+        }
     }
     
     private func updateTrackers(_ trackerCoreData: TrackerCoreData, with tracker: Tracker) {

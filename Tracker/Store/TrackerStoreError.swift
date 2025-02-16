@@ -10,4 +10,5 @@ enum TrackerStoreError: Error {
     case missingTitle
     case missingColor
     case invalidSchedule
+    case trackerNotFound
 }

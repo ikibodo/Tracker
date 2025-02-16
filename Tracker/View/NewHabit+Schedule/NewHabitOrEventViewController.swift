@@ -264,7 +264,7 @@ final class NewHabitOrEventViewController: UIViewController, ScheduleViewControl
         )
         
         let categoryTracker = TrackerCategory(
-            title: self.categoryTitle ?? "Новые трекеры",
+            title: self.categoryTitle ?? "Разное",
             trackers: [newTracker])
         delegate?.addTracker(newTracker, to: categoryTracker)
         presentingViewController?.presentingViewController?.dismiss(animated: true)
@@ -319,7 +319,6 @@ extension NewHabitOrEventViewController: UITableViewDataSource{
         switch indexPath.row {
         case 0:
             print("🔘 Tapped Категория")
-//            let categoryViewController = CategoryViewController()
             let categoryViewModel = CategoryViewModelFactory.createCategoryViewModel()
             let categoryViewController = CategoryViewController(categoryViewModel: categoryViewModel)
             

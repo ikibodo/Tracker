@@ -17,9 +17,14 @@ final class TrackerCell: UICollectionViewCell {
     
     var currentDate: Date?
     var trackerId: UUID?
+    var isPinned: Bool = false {
+        didSet {
+            updatePinVisibility(shouldShowPin: isPinned)
+        }
+    }
     
     private var indexPath: IndexPath?
-    
+    private var blurEffectView: UIVisualEffectView?
     private var isCompletedToday = false
     private let doneImage = UIImage(named: "Done")
     private let plusImage = UIImage(named: "Plus")
@@ -56,6 +61,15 @@ final class TrackerCell: UICollectionViewCell {
         view.layer.masksToBounds = true
         view.translatesAutoresizingMaskIntoConstraints = false
         return view
+    }()
+    
+    private let pin: UIImageView = {
+        let imageView = UIImageView()
+        imageView.image = UIImage(named: "Pin")
+        imageView.contentMode = .scaleAspectFit
+        imageView.translatesAutoresizingMaskIntoConstraints = false
+        imageView.isHidden = true
+        return imageView
     }()
     
     var emoji: UILabel = {
@@ -97,52 +111,6 @@ final class TrackerCell: UICollectionViewCell {
         fatalError("init(coder:) has not been implemented")
     }
     
-    private func addSubview() {
-        contentView.addSubview(topContainerView)
-        contentView.addSubview(bottomContainerView)
-        
-        topContainerView.addSubview(emojiView)
-        topContainerView.addSubview(emoji)
-        topContainerView.addSubview(titleLabel)
-        
-        bottomContainerView.addSubview(actionButton)
-        bottomContainerView.addSubview(dayNumberView)
-    }
-    
-    private func addConstraints() {
-        NSLayoutConstraint.activate([
-            topContainerView.topAnchor.constraint(equalTo: contentView.topAnchor),
-            topContainerView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
-            topContainerView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
-            topContainerView.heightAnchor.constraint(equalToConstant: 90),
-            
-            bottomContainerView.topAnchor.constraint(equalTo: topContainerView.bottomAnchor),
-            bottomContainerView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
-            bottomContainerView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
-            bottomContainerView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
-            
-            emojiView.topAnchor.constraint(equalTo: topContainerView.topAnchor, constant: 12),
-            emojiView.leadingAnchor.constraint(equalTo: topContainerView.leadingAnchor, constant: 12),
-            emojiView.widthAnchor.constraint(equalToConstant: 24),
-            emojiView.heightAnchor.constraint(equalToConstant: 24),
-            
-            emoji.centerXAnchor.constraint(equalTo: emojiView.centerXAnchor),
-            emoji.centerYAnchor.constraint(equalTo: emojiView.centerYAnchor),
-            
-            titleLabel.leadingAnchor.constraint(equalTo: topContainerView.leadingAnchor, constant: 12),
-            titleLabel.trailingAnchor.constraint(equalTo: topContainerView.trailingAnchor, constant: -12),
-            titleLabel.bottomAnchor.constraint(equalTo: topContainerView.bottomAnchor, constant: -12),
-            
-            dayNumberView.topAnchor.constraint(equalTo: bottomContainerView.topAnchor, constant: 16),
-            dayNumberView.leadingAnchor.constraint(equalTo: bottomContainerView.leadingAnchor, constant: 12),
-            
-            actionButton.topAnchor.constraint(equalTo: bottomContainerView.topAnchor, constant: 8),
-            actionButton.trailingAnchor.constraint(equalTo: bottomContainerView.trailingAnchor, constant: -12),
-            actionButton.widthAnchor.constraint(equalToConstant: 34),
-            actionButton.heightAnchor.constraint(equalToConstant: 34)
-        ])
-    }
-    
     func setupCell(with tracker: Tracker, indexPath: IndexPath, completedDay: Int, isCompletedToday: Bool) {
         self.trackerId = tracker.id
         self.isCompletedToday = isCompletedToday
@@ -174,9 +142,10 @@ final class TrackerCell: UICollectionViewCell {
         }
     }
     
-    func configure(with title: String, date: Date) {
+    func configure(with title: String, date: Date, isPinned: Bool) {
         titleLabel.text = title
         self.currentDate = date
+        self.isPinned = isPinned
     }
     
     func dayWord(for number: Int) -> String {
@@ -195,6 +164,60 @@ final class TrackerCell: UICollectionViewCell {
         default:
             return "дней"
         }
+    }
+    
+    func updatePinVisibility(shouldShowPin: Bool) {
+        pin.isHidden = !shouldShowPin
+    }
+    
+    private func addSubview() {
+        contentView.addSubview(topContainerView)
+        contentView.addSubview(bottomContainerView)
+        
+        topContainerView.addSubview(emojiView)
+        topContainerView.addSubview(emoji)
+        topContainerView.addSubview(titleLabel)
+        topContainerView.addSubview(pin)
+        
+        bottomContainerView.addSubview(actionButton)
+        bottomContainerView.addSubview(dayNumberView)
+    }
+    
+    private func addConstraints() {
+        NSLayoutConstraint.activate([
+            topContainerView.topAnchor.constraint(equalTo: contentView.topAnchor),
+            topContainerView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
+            topContainerView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
+            topContainerView.heightAnchor.constraint(equalToConstant: 90),
+            
+            bottomContainerView.topAnchor.constraint(equalTo: topContainerView.bottomAnchor),
+            bottomContainerView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
+            bottomContainerView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
+            bottomContainerView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
+            
+            emojiView.topAnchor.constraint(equalTo: topContainerView.topAnchor, constant: 12),
+            emojiView.leadingAnchor.constraint(equalTo: topContainerView.leadingAnchor, constant: 12),
+            emojiView.widthAnchor.constraint(equalToConstant: 24),
+            emojiView.heightAnchor.constraint(equalToConstant: 24),
+            
+            emoji.centerXAnchor.constraint(equalTo: emojiView.centerXAnchor),
+            emoji.centerYAnchor.constraint(equalTo: emojiView.centerYAnchor),
+            
+            pin.centerYAnchor.constraint(equalTo: emojiView.centerYAnchor),
+            pin.trailingAnchor.constraint(equalTo: topContainerView.trailingAnchor, constant: -12),
+            
+            titleLabel.leadingAnchor.constraint(equalTo: topContainerView.leadingAnchor, constant: 12),
+            titleLabel.trailingAnchor.constraint(equalTo: topContainerView.trailingAnchor, constant: -12),
+            titleLabel.bottomAnchor.constraint(equalTo: topContainerView.bottomAnchor, constant: -12),
+            
+            dayNumberView.topAnchor.constraint(equalTo: bottomContainerView.topAnchor, constant: 16),
+            dayNumberView.leadingAnchor.constraint(equalTo: bottomContainerView.leadingAnchor, constant: 12),
+            
+            actionButton.topAnchor.constraint(equalTo: bottomContainerView.topAnchor, constant: 8),
+            actionButton.trailingAnchor.constraint(equalTo: bottomContainerView.trailingAnchor, constant: -12),
+            actionButton.widthAnchor.constraint(equalToConstant: 34),
+            actionButton.heightAnchor.constraint(equalToConstant: 34)
+        ])
     }
     
     @objc private func buttonTapped() {
