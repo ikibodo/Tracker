@@ -14,13 +14,17 @@ final class NewHabitOrEventViewController: UIViewController, ScheduleViewControl
     
     weak var trackerViewController: TrackerTypeViewController?
     weak var delegate: NewHabitOrEventViewControllerDelegate?
+    weak var editTrackerDelegate: NewHabitOrEventViewControllerDelegate?
+    
+    var editingTracker: Tracker?
+    var categoryTitle: String?
+    var isFillTrackerName: Bool = false
     
     private var trackerItemsTopConstraint: NSLayoutConstraint!
     private var schedule: [WeekDay?] = []
     private let itemsForHabits = ["Категория", "Расписание"]
     private let itemsForEvents = ["Категория"]
     private var currentItems: [String] = []
-    private var categoryTitle: String?
     private var emoji: String?
     private var color: UIColor?
     private var previousText: String?
@@ -157,6 +161,7 @@ final class NewHabitOrEventViewController: UIViewController, ScheduleViewControl
         updateNavigationBarTitle(forItems: currentItems)
         addSubViews()
         addConstraints()
+        if editingTracker != nil { editTracker() }
     }
     
     func didUpdateSchedule(_ schedule: [WeekDay?]) {
@@ -167,10 +172,14 @@ final class NewHabitOrEventViewController: UIViewController, ScheduleViewControl
     }
     
     private func updateNavigationBarTitle(forItems items: [String]) {
-        if items == itemsForHabits {
-            titleLabel.text = "Новая привычка"
-        } else if items == itemsForEvents {
-            titleLabel.text = "Новое нерегулярное событие"
+        if editingTracker != nil {
+            titleLabel.text = "Редактирование привычки"
+        } else {
+            if items == itemsForHabits {
+                titleLabel.text = "Новая привычка"
+            } else if items == itemsForEvents {
+                titleLabel.text = "Новое нерегулярное событие"
+            }
         }
         guard let navigationBar = navigationController?.navigationBar else { return }
         navigationBar.topItem?.titleView = titleLabel
@@ -253,10 +262,18 @@ final class NewHabitOrEventViewController: UIViewController, ScheduleViewControl
         createButton.backgroundColor = createButton.isEnabled ? .ypBlack : .ypGray
     }
     
+    private func editTracker() {
+        color = self.editingTracker?.color ?? .colorSelected5
+        emoji = editingTracker?.emoji
+        schedule = editingTracker?.schedule ?? []
+        trackerNameInput.text = editingTracker?.name
+        isFillTrackerName = true
+    }
+    
     @objc
     private func createButtonTapped() {
         let newTracker = Tracker(
-            id: UUID(),
+            id: editingTracker?.id ?? UUID(),
             name: trackerNameInput.text ?? "Привычка",
             color: self.color ?? .colorSelected5,
             emoji: self.emoji ?? "🌟",
@@ -266,8 +283,13 @@ final class NewHabitOrEventViewController: UIViewController, ScheduleViewControl
         let categoryTracker = TrackerCategory(
             title: self.categoryTitle ?? "Разное",
             trackers: [newTracker])
-        delegate?.addTracker(newTracker, to: categoryTracker)
-        presentingViewController?.presentingViewController?.dismiss(animated: true)
+        if let delegate = delegate {
+            delegate.addTracker(newTracker, to: categoryTracker)
+            presentingViewController?.presentingViewController?.dismiss(animated: true)
+        } else if let editTrackerDelegate = editTrackerDelegate {
+            editTrackerDelegate.addTracker(newTracker, to: categoryTracker)
+            self.dismiss(animated: true)
+        }
         print("🔘 Tapped Создать и в категорию: \(categoryTracker.title) добавляется трекер: \(newTracker.name) ")
     }
     

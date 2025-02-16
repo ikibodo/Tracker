@@ -26,11 +26,22 @@ final class TrackerStore: NSObject, NSFetchedResultsControllerDelegate {
     }
     
     func addTracker(_ tracker: Tracker, with category: TrackerCategory) throws {
-        let trackerCoreData = TrackerCoreData(context: context)
-        updateTrackers(trackerCoreData, with: tracker)
+        let fetchRequest: NSFetchRequest<TrackerCoreData> = TrackerCoreData.fetchRequest()
+        fetchRequest.predicate = NSPredicate(format: "id == %@", tracker.id as CVarArg)
+        let existingTrackers = try context.fetch(fetchRequest)
+        let trackerCoreData: TrackerCoreData
+        
+        if let existingTrackerCoreData = existingTrackers.first {
+            trackerCoreData = existingTrackerCoreData
+            updateTrackers(trackerCoreData, with: tracker)
+            print("🟡 Трекер \(tracker.name) обновлен в Core Data")
+        } else {
+            trackerCoreData = TrackerCoreData(context: context)
+            updateTrackers(trackerCoreData, with: tracker)
+            print("📌 Трекер \(tracker.name) добавлен в Core Data")
+        }
         let categoryToAdd = try fetchCategory(with: category.title) ?? createNewCategory(with: category.title)
         categoryToAdd.addToTracker(trackerCoreData)
-        print("Трекер добавлен в категорию \(categoryToAdd.title ?? "неизвестная категория")")
         saveContext()
     }
     
@@ -75,7 +86,7 @@ final class TrackerStore: NSObject, NSFetchedResultsControllerDelegate {
             trackerCoreData.schedule = nil
         }
     }
-
+    
     private func createTracker(from trackerCoreData: TrackerCoreData) throws -> Tracker {
         guard let id = trackerCoreData.id ?? UUID() as UUID?,
               let name = trackerCoreData.name else {

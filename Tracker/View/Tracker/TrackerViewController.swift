@@ -393,7 +393,18 @@ extension TrackersViewController: UICollectionViewDelegate, UICollectionViewData
     }
     
     private func editTracker(id: UUID, at indexPath: IndexPath) {
-        // TODO Логика для редактирования привычки
+        guard let category = categories.first(where: { $0.trackers.contains(where: { $0.id == id }) }),
+              let tracker = category.trackers.first(where: { $0.id == id }) else {
+            return
+        }
+        let editTrackerVC = NewHabitOrEventViewController(isForHabits: !tracker.schedule.isEmpty)
+        editTrackerVC.editTrackerDelegate = self
+        editTrackerVC.editingTracker = tracker
+        editTrackerVC.categoryTitle = category.title
+        
+        let navigationController = UINavigationController(rootViewController: editTrackerVC)
+        navigationController.modalPresentationStyle = .pageSheet
+        present(navigationController, animated: true)
     }
     
     private func showDeleteTrackerAlert(id: UUID, at indexPath: IndexPath) {

@@ -14,7 +14,6 @@ final class CategoryViewController: UIViewController {
     
     weak var delegate: CategoryViewControllerDelegate?
     
-    //    private var categoryViewModel = CategoryViewModel()
     private var categoryViewModel: CategoryViewModel
     
     init(categoryViewModel: CategoryViewModel) {
