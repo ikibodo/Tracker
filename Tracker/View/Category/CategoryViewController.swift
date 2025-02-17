@@ -102,6 +102,7 @@ final class CategoryViewController: UIViewController {
     private func setupNavigationBar() {
         guard let navigationBar = navigationController?.navigationBar else { return }
         navigationBar.topItem?.titleView = titleLabel
+        titleLabel.sizeToFit()
     }
     
     private func addSubViews() {
@@ -114,8 +115,6 @@ final class CategoryViewController: UIViewController {
     
     private func addConstraints() {
         NSLayoutConstraint.activate([
-            titleLabel.centerYAnchor.constraint(equalTo: view.centerYAnchor),
-            
             placeholderImage.centerYAnchor.constraint(equalTo: view.centerYAnchor),
             placeholderImage.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             

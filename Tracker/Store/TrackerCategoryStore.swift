@@ -92,7 +92,7 @@ final class TrackerCategoryStore: NSObject {
                 let tracker = try createTracker(from: trackerCoreData)
                 trackers.append(tracker)
             } catch {
-                print("Не удалось создать трекер для категории \(title): \(error)")
+                print("TrackerCategoryStore Не удалось создать трекер для категории \(title): \(error)")
             }
         }
         return TrackerCategory(title: title, trackers: trackers)
@@ -100,7 +100,7 @@ final class TrackerCategoryStore: NSObject {
     
     private func mapToCoreData(_ tracker: Tracker) -> TrackerCoreData {
         guard let (colorString, _) = colorDictionary.first(where: { $0.value == tracker.color }) else {
-            fatalError("Не удалось найти строковое представление для цвета \(tracker.color)")
+            fatalError("TrackerCategoryStore Не удалось найти строковое представление для цвета \(tracker.color)")
         }
         
         let trackerEntity = TrackerCoreData(context: context)
@@ -108,7 +108,7 @@ final class TrackerCategoryStore: NSObject {
         trackerEntity.name = tracker.name
         trackerEntity.color = colorString
         trackerEntity.emoji = tracker.emoji
-        print("🟡 updateTrackers - Исходное schedule перед трансформацией: \(tracker.schedule)")
+        print("TrackerCategoryStore - Исходное schedule перед трансформацией: \(tracker.schedule)")
         trackerEntity.schedule = tracker.schedule as NSObject
         return trackerEntity
     }
@@ -131,11 +131,11 @@ final class TrackerCategoryStore: NSObject {
         if let scheduleData = trackerCoreData.schedule as? [WeekDay?] {
             schedule = scheduleData.compactMap { $0 }
         }
-
-        if schedule.isEmpty {
-            print("❌ Проблема ТrackerCoreData: расписание оказалось пустым после фильтрации.")
-        }
-        print("📜 Извлеченное расписание в TrackerCoreData: \(schedule)")
+// удалить - нужно было для отладки
+//        if schedule.isEmpty {
+//            print("ТrackerCoreData: расписание оказалось пустым после фильтрации.")
+//        }
+//        print("Извлеченное расписание в TrackerCoreData: \(schedule)")
         return Tracker(id: id, name: name, color: color, emoji: emoji, schedule: schedule)
     }
     

@@ -135,6 +135,21 @@ final class TrackersViewController: UIViewController {
         return collectionView
     }()
     
+    private lazy var filterButton: UIButton = {
+        let button = UIButton()
+        button.backgroundColor = .ypBlue
+        button.setTitle("Фильтры", for: .normal)
+        button.titleLabel?.textColor = .ypWhite
+        button.tintColor = .ypWhite
+        button.layer.cornerRadius = 16
+        button.titleLabel?.textAlignment = .center
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 17, weight: .regular)
+        button.clipsToBounds = true
+        button.translatesAutoresizingMaskIntoConstraints = false
+        button.addTarget(self, action: #selector(filterButtonTapped), for: .touchUpInside)
+        return button
+    }()
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .ypWhite
@@ -166,6 +181,7 @@ final class TrackersViewController: UIViewController {
         view.addSubview(errorImage)
         view.addSubview(errorLabel)
         view.addSubview(collectionView)
+        view.addSubview(filterButton)
     }
     
     private func addConstraints() {
@@ -187,6 +203,11 @@ final class TrackersViewController: UIViewController {
             collectionView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
             collectionView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor),
             collectionView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor),
+            
+            filterButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -16),
+            filterButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            filterButton.widthAnchor.constraint(equalToConstant: 114),
+            filterButton.heightAnchor.constraint(equalToConstant: 50)
         ])
     }
     
@@ -211,10 +232,17 @@ final class TrackersViewController: UIViewController {
     
     // MARK: - Actions
     
-    @objc
-    private func didTapPlusButton() {
+    @objc private func didTapPlusButton() {
         print("🔘 Tapped + и открывается страница выбора типа трекера")
         let viewController = TrackerTypeViewController()
+        viewController.delegate = self
+        let navigationController = UINavigationController(rootViewController: viewController)
+        navigationController.modalPresentationStyle = .pageSheet
+        present(navigationController, animated: true)
+    }
+    
+    @objc private func filterButtonTapped() {
+        let viewController = FiltersViewController()
         viewController.delegate = self
         let navigationController = UINavigationController(rootViewController: viewController)
         navigationController.modalPresentationStyle = .pageSheet
@@ -504,6 +532,12 @@ extension TrackersViewController: NewHabitOrEventViewControllerDelegate {
         } catch {
             print("Ошибка при добавлении трекера: \(error.localizedDescription)")
         }
+    }
+}
+
+extension TrackersViewController: FiltersViewControllerDelegate {
+    func didSelectFilter(selectFilter: String) {
+        //
     }
 }
 

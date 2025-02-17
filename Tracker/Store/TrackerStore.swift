@@ -141,7 +141,7 @@ final class TrackerStore: NSObject, NSFetchedResultsControllerDelegate {
         trackerCoreData.name = tracker.name
         trackerCoreData.color = colorString
         trackerCoreData.emoji = tracker.emoji
-        print("🟡 updateTrackers - Исходное schedule перед трансформацией: \(tracker.schedule)")
+        print("TrackerStore updateTrackers - Исходное schedule перед трансформацией: \(tracker.schedule)")
         trackerCoreData.schedule = tracker.schedule as NSObject
     }
     
@@ -163,10 +163,11 @@ final class TrackerStore: NSObject, NSFetchedResultsControllerDelegate {
         if let scheduleData = trackerCoreData.schedule as? [WeekDay?] {
             schedule = scheduleData.compactMap { $0 }
         }
-        if schedule.isEmpty {
-            print("❌ Проблема TrackerStore: расписание оказалось пустым после фильтрации.")
-        }
-        print("🟡 Извлеченное расписание в TrackerStore: \(schedule)")
+        // удалить - нужно было для отладки
+//        if schedule.isEmpty {
+//            print("TrackerStore: расписание оказалось пустым после фильтрации.")
+//        }
+//        print("TrackerStore Извлеченное расписание в TrackerStore: \(schedule)")
         return Tracker(id: id, name: name, color: color, emoji: emoji, schedule: schedule)
     }
     

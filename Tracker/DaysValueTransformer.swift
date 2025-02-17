@@ -12,49 +12,48 @@ final class DaysValueTransformer: ValueTransformer {
     override class func allowsReverseTransformation() -> Bool { true }
     
     override func transformedValue(_ value: Any?) -> Any? {
-        print("DaysValueTransformer - Начальное значение \(String(describing: value))")
-       
-//        guard let days = value as? [WeekDay] else {
+        print("DVT - Начальное значение \(String(describing: value))")
+
         guard let days = value as? [WeekDay?] else {
-            print("DaysValueTransformer - возвращаю nil так как не подходящее значение value: \(String(describing: value))")
+            print("DVT - Возвращаю nil так как не подходящее значение value: \(String(describing: value))")
             return nil
         }
         let filteredDays = days.compactMap { $0 }
-        print("🟡 DaysValueTransformer - После удаления nil значений: \(filteredDays)")
+        print("DVT - После удаления nil значений: \(filteredDays)")
         
         if filteredDays.isEmpty {
-            print(" 🟡 Массив пуст, сохраняем пустой массив в Core Data.")
+            print("DVT - массив пуст, сохраняем пустой массив в Core Data.")
         } else {
-            print("🟡 Массив не пуст, сохраняем данные.")
+            print("DVT - массив не пуст, сохраняем данные.")
         }
         
         do {
             let encodedData = try JSONEncoder().encode(filteredDays) as NSData
-            print("DaysValueTransformer - Сереализованные данные: \(encodedData)" )
+            print("DVT - Сереализованные данные: \(encodedData)" )
             return encodedData as NSData
          } catch {
-             print("DaysValueTransformer - Ошибка кодирования: \(error)")
+             print("DVT - Ошибка кодирования: \(error)")
              return nil
          }
     }
     
     override func reverseTransformedValue(_ value: Any?) -> Any? {
-        print("DaysValueTransformer reverse - Тип value из CoreData:", type(of: value))
+        print("DVT - Тип value из CoreData:", type(of: value))
         guard let data = value as? NSData else {
-            print("Ошибка: scheduleData не NSData - возвращаю nil")
+            print("DVT - Ошибка: scheduleData не NSData - возвращаю nil")
             return nil
         }
         if let jsonString = String(data: data as Data, encoding: .utf8) {
-              print("DaysValueTransformer reverse - JSON перед декодированием:", jsonString)
+              print("DVT - JSON перед декодированием:", jsonString)
           } else {
-              print("DaysValueTransformer reverse: ошибка - не удалось преобразовать в строку")
+              print("DVT - Ошибка: не удалось преобразовать в строку")
           }
         do {
             let decodedDays = try JSONDecoder().decode([WeekDay].self, from: data as Data)
-            print("DaysValueTransformer reverse - Декодированные дни:", decodedDays)
+            print("DVT - Декодированные дни:", decodedDays)
             return decodedDays
         } catch {
-            print("DaysValueTransformer reverse - Ошибка декодирования: \(error)")
+            print("DVT - Ошибка декодирования: \(error)")
             return nil
         }
     }
