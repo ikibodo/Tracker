@@ -7,16 +7,18 @@
 import UIKit
 
 protocol FiltersViewControllerDelegate: AnyObject {
-    func didSelectFilter(selectFilter: String)
+    func didSelectFilter(selectFilter: TrackerFilter)
 }
 
 final class FiltersViewController: UIViewController {
     
     weak var delegate: FiltersViewControllerDelegate?
     
-    private var filterList = ["Все трекеры", "Трекеры на сегодня", "Завершенные", "Не завершенные"]
-    private var selectedFilter: String?
+    var appSettingsStore = AppSettingsStore()
     
+    private var filterList: [TrackerFilter] = TrackerFilter.allCases
+    private var selectedFilter: TrackerFilter?
+
     private lazy var titleLabel: UILabel = {
         let label = UILabel()
         label.textColor = .ypBlack
@@ -47,6 +49,12 @@ final class FiltersViewController: UIViewController {
         setupNavigationBar()
         addSubViews()
         addConstraints()
+        if let savedFilter = appSettingsStore.selectedFilter {
+            selectedFilter = savedFilter
+        } else {
+            selectedFilter = filterList.first 
+        }
+        tableView.reloadData()
     }
     
     private func setupNavigationBar() {
@@ -84,24 +92,30 @@ extension FiltersViewController: UITableViewDelegate, UITableViewDataSource {
         }
         
         let filter = filterList[indexPath.row]
-            let isSelected = filter == selectedFilter
-            cell.configure(with: filter, isSelected: isSelected)
+        let isSelected = filter == selectedFilter
+        cell.configure(with: filter.rawValue, isSelected: isSelected)
         
         let isLastCell = indexPath.row == filterList.count - 1
-            cell.setSeparatorVisibility(isHidden: isLastCell)
+        cell.setSeparatorVisibility(isHidden: isLastCell)
         
-            return cell
+        return cell
     }
-
+    
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        let filter = filterList[indexPath.row]
-        if selectedFilter == filter {
-                    selectedFilter = nil
-                } else {
-                    selectedFilter = filter
-                }
-        tableView.reloadData()
-        delegate?.didSelectFilter(selectFilter: filter)
+        let newSelectedFilter = filterList[indexPath.row]
+        if selectedFilter == newSelectedFilter { return }
+        
+        let previousIndex = selectedFilter.flatMap { filterList.firstIndex(of: $0) }
+        selectedFilter = newSelectedFilter
+        appSettingsStore.selectedFilter = newSelectedFilter
+        
+        var indexPathsToReload = [indexPath]
+        if let previousIndex = previousIndex {
+            indexPathsToReload.append(IndexPath(row: previousIndex, section: 0))
+        }
+        tableView.reloadRows(at: indexPathsToReload, with: .automatic)
+
+        delegate?.didSelectFilter(selectFilter: newSelectedFilter)
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
             self.dismiss(animated: true, completion: nil)
         }
