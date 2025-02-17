@@ -13,7 +13,6 @@ final class TrackersViewController: UIViewController {
     private var visibleCategories: [TrackerCategory] = []
     private var trackers: [Tracker] = []
     private var completedTrackers: [TrackerRecord] = []
-    private var pinnedTrackers: Set<UUID> = []
     
     private let cellIdentifier = "cell"
     private var countDays: Int = 0
@@ -156,7 +155,7 @@ final class TrackersViewController: UIViewController {
         
         loadCategories()
         dateChanged()
-        //      deleteAllData()
+//              deleteAllData()
     }
     
     private func addSubViews() {
@@ -235,23 +234,21 @@ final class TrackersViewController: UIViewController {
         guard let selectedWeekDay = WeekDay.from(weekdayIndex: selectedDayIndex) else { return }
         loadCategories()
         var newVisibleCategories: [TrackerCategory] = []
-        
-        let pinnedTrackersList: [Tracker] = categories
-            .flatMap { $0.trackers }
-            .filter { pinnedTrackers.contains($0.id) }
-        
+        let pinnedTrackersList = trackerStore.fetchPinnedTrackers()
         if !pinnedTrackersList.isEmpty {
             newVisibleCategories.append(TrackerCategory(title: "Закрепленные", trackers: pinnedTrackersList))
         }
         
         let filteredCategories: [TrackerCategory] = categories.compactMap { category in
             let filteredTrackers: [Tracker] = category.trackers.filter { tracker in
+                if pinnedTrackersList.contains(where: { $0.id == tracker.id }) {
+                    return false
+                }
                 if tracker.schedule.isEmpty {
                     return true
                 }
                 return tracker.schedule.contains(selectedWeekDay)
             }
-            
             return filteredTrackers.isEmpty ? nil : TrackerCategory(title: category.title, trackers: filteredTrackers)
         }
         
@@ -307,7 +304,7 @@ extension TrackersViewController: UICollectionViewDelegate, UICollectionViewData
         
         let isCompletedToday = isTrackerCompletedToday(id: tracker.id)
         cell.delegate = self
-        let isPinned = pinnedTrackers.contains(tracker.id)
+        let isPinned = trackerStore.isTrackerPinned(id: tracker.id)
         let currentDate = datePicker.date
         let completedDay = (try? trackerRecordStore.completedDays(for: tracker.id).count) ?? 0
         cell.configure(with: tracker.name, date: currentDate, isPinned: isPinned)
@@ -337,8 +334,8 @@ extension TrackersViewController: UICollectionViewDelegate, UICollectionViewData
     
     func collectionView(_ collectionView: UICollectionView, contextMenuConfigurationForItemAt indexPath: IndexPath, point: CGPoint) -> UIContextMenuConfiguration? {
         let tracker = visibleCategories[indexPath.section].trackers[indexPath.row]
-        let isPinned = pinnedTrackers.contains(tracker.id)
-        
+        let isPinned = trackerStore.isTrackerPinned(id: tracker.id)
+
         let pinAction = UIAction(title: isPinned ? "Открепить" : "Закрепить", handler: { _ in
             if isPinned {
                 self.unpinTracker(id: tracker.id, at: indexPath)
@@ -373,24 +370,27 @@ extension TrackersViewController: UICollectionViewDelegate, UICollectionViewData
         
         return UITargetedPreview(view: cell.topContainerView)
     }
-    
+
     private func pinTracker(id: UUID, at indexPath: IndexPath) {
-        if !pinnedTrackers.contains(id) {
-            pinnedTrackers.insert(id)
-            print("Закреплен трекер с id \(id)")
+            do {
+                try trackerStore.pinTracker(id: id)
+                updateVisibleCategories()
+                collectionView.reloadItems(at: [indexPath])
+            } catch {
+                print("Ошибка при закреплении трекера: \(error)")
+            }
         }
-        updateVisibleCategories()
-        collectionView.reloadItems(at: [indexPath])
-    }
-    
-    private func unpinTracker(id: UUID, at indexPath: IndexPath) {
-        if pinnedTrackers.contains(id) {
-            pinnedTrackers.remove(id)
-            print("Откреплен трекер с id \(id)")
+
+        private func unpinTracker(id: UUID, at indexPath: IndexPath) {
+            do {
+                try trackerStore.unpinTracker(id: id)
+                updateVisibleCategories()
+                collectionView.reloadItems(at: [indexPath])
+            } catch {
+                print("Ошибка при откреплении трекера: \(error)")
+            }
         }
-        updateVisibleCategories()
-        collectionView.reloadItems(at: [indexPath])
-    }
+
     
     private func editTracker(id: UUID, at indexPath: IndexPath) {
         guard let category = categories.first(where: { $0.trackers.contains(where: { $0.id == id }) }),

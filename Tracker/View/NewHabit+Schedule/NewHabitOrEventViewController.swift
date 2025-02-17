@@ -18,7 +18,6 @@ final class NewHabitOrEventViewController: UIViewController, ScheduleViewControl
     
     var editingTracker: Tracker?
     var categoryTitle: String?
-    var isFillTrackerName: Bool = false
     
     private var trackerItemsTopConstraint: NSLayoutConstraint!
     private var schedule: [WeekDay?] = []
@@ -267,7 +266,7 @@ final class NewHabitOrEventViewController: UIViewController, ScheduleViewControl
         emoji = editingTracker?.emoji
         schedule = editingTracker?.schedule ?? []
         trackerNameInput.text = editingTracker?.name
-        isFillTrackerName = true
+        createButton.setTitle("Сохранить", for: .normal)
     }
     
     @objc

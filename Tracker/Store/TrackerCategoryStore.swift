@@ -108,13 +108,8 @@ final class TrackerCategoryStore: NSObject {
         trackerEntity.name = tracker.name
         trackerEntity.color = colorString
         trackerEntity.emoji = tracker.emoji
-        if let transformedSchedule = DaysValueTransformer().transformedValue(tracker.schedule) as? NSObject {
-            trackerEntity.schedule = transformedSchedule
-            print("mapToCoreData - Успешно сохраненное schedule: \(transformedSchedule)")
-        } else {
-            print("mapToCoreData - Ошибка преобразования расписания! Schedule не сохранен")
-            trackerEntity.schedule = nil
-        }
+        print("🟡 updateTrackers - Исходное schedule перед трансформацией: \(tracker.schedule)")
+        trackerEntity.schedule = tracker.schedule as NSObject
         return trackerEntity
     }
     
@@ -130,16 +125,17 @@ final class TrackerCategoryStore: NSObject {
         } else {
             color = .colorSelected17
         }
-        
+
         let emoji = trackerCoreData.emoji ?? ""
-        
-        let schedule: [WeekDay]
-        if let scheduleData = trackerCoreData.schedule,
-           let transformedSchedule = DaysValueTransformer().reverseTransformedValue(scheduleData) as? [WeekDay] {
-            schedule = transformedSchedule
-        } else {
-            schedule = []
+        var schedule: [WeekDay] = []
+        if let scheduleData = trackerCoreData.schedule as? [WeekDay?] {
+            schedule = scheduleData.compactMap { $0 }
         }
+
+        if schedule.isEmpty {
+            print("❌ Проблема ТrackerCoreData: расписание оказалось пустым после фильтрации.")
+        }
+        print("📜 Извлеченное расписание в TrackerCoreData: \(schedule)")
         return Tracker(id: id, name: name, color: color, emoji: emoji, schedule: schedule)
     }
     
