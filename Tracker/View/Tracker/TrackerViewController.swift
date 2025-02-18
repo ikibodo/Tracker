@@ -8,6 +8,9 @@ import UIKit
 
 final class TrackersViewController: UIViewController {
     
+    private var appSettingsStore = AppSettingsStore()
+    private var currentFilter: TrackerFilter = .allTrackers
+    
     private var newHabitOrEventViewController: NewHabitOrEventViewController!
     private var categories: [TrackerCategory] = []
     private var visibleCategories: [TrackerCategory] = []
@@ -87,22 +90,32 @@ final class TrackersViewController: UIViewController {
     }()
     
     private lazy var errorLabel: UILabel = {
-        let descriptionLabel = UILabel()
-        descriptionLabel.text = "Что будем отслеживать?"
-        descriptionLabel.font = .systemFont(ofSize: 12, weight: .medium)
-        descriptionLabel.textColor = .ypBlack
-        descriptionLabel.numberOfLines = 2
-        descriptionLabel.textAlignment = .center
-        descriptionLabel.translatesAutoresizingMaskIntoConstraints = false
-        return descriptionLabel
+        let label = UILabel()
+        label.text = "Что будем отслеживать?"
+        label.font = .systemFont(ofSize: 12, weight: .medium)
+        label.textColor = .ypBlack
+        label.numberOfLines = 2
+        label.textAlignment = .center
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
     }()
     
     private lazy var errorSearchImage: UIImageView = {
         let imageView = UIImageView()
         imageView.image = UIImage(named: "ErrorSearch")
-        imageView.isHidden = true
         imageView.translatesAutoresizingMaskIntoConstraints = false
         return imageView
+    }()
+    
+    private lazy var errorSearchLabel: UILabel = {
+        let label = UILabel()
+        label.text = "Ничего не найдено"
+        label.font = .systemFont(ofSize: 12, weight: .medium)
+        label.textColor = .ypBlack
+        label.numberOfLines = 2
+        label.textAlignment = .center
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
     }()
     
     private lazy var datePicker: UIDatePicker = {
@@ -112,7 +125,7 @@ final class TrackersViewController: UIViewController {
         let localID = Locale.preferredLanguages.first ?? "ru_RU"
         datePicker.locale = Locale(identifier: localID)
         datePicker.translatesAutoresizingMaskIntoConstraints = false
-        datePicker.addTarget(self, action: #selector(dateChanged), for: .valueChanged)
+        datePicker.addTarget(self, action: #selector(datePickerChanged), for: .valueChanged)
         return datePicker
     }()
     
@@ -167,18 +180,23 @@ final class TrackersViewController: UIViewController {
         trackerCategoryStore.delegate = self
         //      trackerCategoryStore.setupFetchedResultsController()
         //      categories = MockData.mockData
+        if let savedFilter = appSettingsStore.selectedFilter {
+            currentFilter = savedFilter
+        } else {
+            currentFilter = .allTrackers
+            appSettingsStore.selectedFilter = .allTrackers
+        }
         
         setupNavigationBar()
         addSubViews()
         addConstraints()
-        //        showContentOrPlaceholder()
         updateErrorImageVisibility()
         
         newHabitOrEventViewController = NewHabitOrEventViewController()
         newHabitOrEventViewController.delegate = self
         
         loadCategories()
-        dateChanged()
+        datePickerChanged()
         //              deleteAllData()
     }
     
@@ -190,6 +208,7 @@ final class TrackersViewController: UIViewController {
         view.addSubview(errorImage)
         view.addSubview(errorLabel)
         view.addSubview(errorSearchImage)
+        view.addSubview(errorSearchLabel)
         view.addSubview(collectionView)
         view.addSubview(filterButton)
     }
@@ -211,6 +230,9 @@ final class TrackersViewController: UIViewController {
             
             errorSearchImage.topAnchor.constraint(equalTo: view.topAnchor, constant: 402),
             errorSearchImage.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            errorSearchLabel.topAnchor.constraint(equalTo: errorImage.bottomAnchor, constant: 8),
+            errorSearchLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
+            errorSearchLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
             
             collectionView.topAnchor.constraint(equalTo: searchTextField.bottomAnchor, constant: 10),
             collectionView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
@@ -234,7 +256,6 @@ final class TrackersViewController: UIViewController {
     // MARK: - Actions
     
     @objc private func didTapPlusButton() {
-        print("🔘 Tapped + и открывается страница выбора типа трекера")
         let viewController = TrackerTypeViewController()
         viewController.delegate = self
         let navigationController = UINavigationController(rootViewController: viewController)
@@ -250,73 +271,113 @@ final class TrackersViewController: UIViewController {
         present(navigationController, animated: true)
     }
     
-    @objc private func dateChanged() {
+    @objc private func datePickerChanged() {
         currentDate = Calendar.current.startOfDay(for: datePicker.date)
         updateVisibleCategories()
     }
     
     private func updateVisibleCategories() {
-        let selectedWeekDay = getCurrentWeekDay()
-        loadCategories()
-        
-        var newVisibleCategories: [TrackerCategory] = getPinnedTrackersCategory()
-        let filteredCategories = getFilteredCategories(excluding: newVisibleCategories, selectedWeekDay: selectedWeekDay)
-        
-        newVisibleCategories.append(contentsOf: filteredCategories)
-        visibleCategories = newVisibleCategories
-        updateErrorImageVisibility()
-        collectionView.reloadData()
-    }
-
-    private func getCurrentWeekDay() -> WeekDay? {
         let calendar = Calendar.current
         let selectedDayIndex = calendar.component(.weekday, from: currentDate)
-        return WeekDay.from(weekdayIndex: selectedDayIndex)
-    }
-
-    private func getPinnedTrackersCategory() -> [TrackerCategory] {
+        print("Update Visible Categories: selectedDayIndex: \(selectedDayIndex)")
+        
+        guard let selectedWeekDay = WeekDay.from(weekdayIndex: selectedDayIndex) else { return }
+        
+        loadCategories()
+        var newVisibleCategories: [TrackerCategory] = []
+        
         let pinnedTrackersList = trackerStore.fetchPinnedTrackers()
-        guard !pinnedTrackersList.isEmpty else { return [] }
-        return [TrackerCategory(title: "Закрепленные", trackers: pinnedTrackersList)]
-    }
-
-    private func getFilteredCategories(excluding pinnedCategories: [TrackerCategory], selectedWeekDay: WeekDay?) -> [TrackerCategory] {
-        guard let selectedWeekDay = selectedWeekDay else { return [] }
-        let pinnedTrackers = pinnedCategories.flatMap { $0.trackers }
-
-        return categories.compactMap { category in
-            let filteredTrackers = category.trackers.filter { tracker in
-                if pinnedTrackers.contains(where: { $0.id == tracker.id }) {
+        if !pinnedTrackersList.isEmpty {
+            newVisibleCategories.append(TrackerCategory(title: "Закрепленные", trackers: pinnedTrackersList))
+        }
+        
+        let filteredCategories: [TrackerCategory] = categories.compactMap { category in
+            let filteredTrackers: [Tracker] = category.trackers.filter { tracker in
+                if pinnedTrackersList.contains(where: { $0.id == tracker.id }) {
                     return false
                 }
                 if tracker.schedule.isEmpty {
                     return true
                 }
-                return tracker.schedule.contains(selectedWeekDay)
+                if !tracker.schedule.contains(selectedWeekDay) {
+                    return false
+                }
+                if let searchText = searchTextField.text?.lowercased(), !searchText.isEmpty {
+                    if !tracker.name.lowercased().contains(searchText) {
+                        return false
+                    }
+                }
+                
+                switch currentFilter {
+                case .allTrackers:
+                    return true
+                case .trackersToday:
+//                    datePicker.date = Date()
+                    return true
+                case .completed:
+                    do {
+                        return try trackerRecordStore.isRecordExists(id: tracker.id, date: currentDate)
+                    } catch {
+                        print("Filter - Ошибка при проверке выполнения трекера: \(error)")
+                        return false
+                    }
+                case .notCompleted:
+                    do {
+                        return try !trackerRecordStore.isRecordExists(id: tracker.id, date: currentDate)
+                    } catch {
+                        print("Filter - Ошибка при проверке выполнения трекера: \(error)")
+                        return true
+                    }
+                }
             }
             return filteredTrackers.isEmpty ? nil : TrackerCategory(title: category.title, trackers: filteredTrackers)
         }
-    }
-
-    private func updateErrorImageVisibility() {
-        let isEmpty = visibleCategories.isEmpty
-        print("Update Visible Categories: Видимые категории: \(visibleCategories)")
         
-        collectionView.isHidden = isEmpty
-        errorImage.isHidden = !isEmpty
-        errorLabel.isHidden = !isEmpty
+        newVisibleCategories.append(contentsOf: filteredCategories)
+        visibleCategories = newVisibleCategories
+        updateErrorImageVisibility()
+        updateFilterButtonState()
+        collectionView.reloadData()
     }
     
-    private func showErrorSearchImage(isHidden: Bool) {
-        errorSearchImage.isHidden = isHidden
+    private func updateErrorImageVisibility() {
+        let isEmpty = visibleCategories.isEmpty
+        let isFilterEmpty = isEmpty && currentFilter != .allTrackers
+        let isNoTrackersForToday = isEmpty && currentFilter == .allTrackers
+        let isSearchError = isEmpty && !(searchTextField.text?.isEmpty ?? true)
+
+        errorSearchImage.isHidden = !(isSearchError || isFilterEmpty)
+        errorSearchLabel.isHidden = !(isSearchError || isFilterEmpty)
+        
+        errorImage.isHidden = !isNoTrackersForToday
+        errorLabel.isHidden = !isNoTrackersForToday
+        
+        filterButton.isHidden = isNoTrackersForToday
+        collectionView.isHidden = isNoTrackersForToday || isFilterEmpty || isSearchError
+    }
+    
+    private func updateFilterButtonState() {
+        if currentFilter != .allTrackers {
+            filterButton.setTitleColor(.ypRed, for: .normal)
+        } else {
+            filterButton.setTitleColor(.ypWhite, for: .normal)
+        }
     }
 }
 
 extension TrackersViewController: UITextFieldDelegate {
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
         textField.resignFirstResponder()
+        updateVisibleCategories()
         return true
-        // TODO сортировка при выборе в поле поиска
+    }
+    
+    func textFieldDidEndEditing(_ textField: UITextField) {
+        updateVisibleCategories()
+    }
+    
+    func textFieldDidChangeSelection(_ textField: UITextField) {
+        updateVisibleCategories()
     }
 }
 
@@ -351,7 +412,7 @@ extension TrackersViewController: UICollectionViewDelegate, UICollectionViewData
         let completedDay = (try? trackerRecordStore.completedDays(for: tracker.id).count) ?? 0
         cell.configure(with: tracker.name, date: currentDate, isPinned: isPinned)
         cell.setupCell(with: tracker, indexPath: indexPath, completedDay: completedDay, isCompletedToday: isCompletedToday)
-        print("Создана ячейка для секции \(indexPath.section), элемента \(indexPath.row), с трекером \(tracker.name)")
+        //        print("Создана ячейка для секции \(indexPath.section), элемента \(indexPath.row), с трекером \(tracker.name)")
         return cell
     }
     
@@ -476,33 +537,6 @@ extension TrackersViewController: UICollectionViewDelegate, UICollectionViewData
     }
 }
 
-extension TrackersViewController: TrackerCellDelegate {
-    func completeTracker(id: UUID, at indexPath: IndexPath) {
-        let todayDate = Date()
-        guard currentDate <= todayDate else {
-            print("Ошибка: нельзя отметить трекер для будущей даты \(datePicker.date)")
-            return
-        }
-        do {
-            try trackerRecordStore.updateRecord(id: id, date: datePicker.date)
-            print("Выполнен трекер с id \(id) о чем создана запись \(datePicker.date)")
-        } catch {
-            print("Ошибка при обновлении записи в CoreData: \(error)")
-        }
-        collectionView.reloadItems(at: [indexPath])
-    }
-    
-    func uncompleteTracker(id: UUID, at indexPath: IndexPath) {
-        do {
-            try trackerRecordStore.deleteRecord(id: id, date: datePicker.date)
-            print("Отмена выполнения трекера с id \(id) - запись удалена")
-        } catch {
-            print("Ошибка при удалении записи из CoreData: \(error)")
-        }
-        collectionView.reloadItems(at: [indexPath])
-    }
-}
-
 extension TrackersViewController: UICollectionViewDelegateFlowLayout {
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, referenceSizeForHeaderInSection section: Int) -> CGSize {
@@ -537,15 +571,47 @@ extension TrackersViewController: UICollectionViewDelegateFlowLayout {
     }
 }
 
+extension TrackersViewController: TrackerCellDelegate {
+    func completeTracker(id: UUID, at indexPath: IndexPath) {
+        let todayDate = Date()
+        guard currentDate <= todayDate else {
+            showDateAlert()
+            print("Ошибка: нельзя отметить трекер для будущей даты \(datePicker.date)")
+            return
+        }
+        do {
+            try trackerRecordStore.updateRecord(id: id, date: datePicker.date)
+            print("Выполнен трекер с id \(id) о чем создана запись \(datePicker.date)")
+        } catch {
+            print("Ошибка при обновлении записи в CoreData: \(error)")
+        }
+        collectionView.reloadItems(at: [indexPath])
+    }
+    
+    func uncompleteTracker(id: UUID, at indexPath: IndexPath) {
+        do {
+            try trackerRecordStore.deleteRecord(id: id, date: datePicker.date)
+            print("Отмена выполнения трекера с id \(id) - запись удалена")
+        } catch {
+            print("Ошибка при удалении записи из CoreData: \(error)")
+        }
+        collectionView.reloadItems(at: [indexPath])
+    }
+    
+    private func showDateAlert() {
+        let alert = UIAlertController(title: nil, message: "Нельзя отметить трекер для будущей даты", preferredStyle: .actionSheet)
+        alert.addAction(UIAlertAction(title: "ОК", style: .default, handler: nil))
+        present(alert, animated: true, completion: nil)
+    }
+}
+
 extension TrackersViewController: TrackerCategoryStoreDelegate {
     private func loadCategories() {
-        print("Загруженные начальные категории: \(trackerCategoryStore.trackersCategory)")
         if trackerCategoryStore.trackersCategory.isEmpty {
             print("Категории пусты")
         }
         categories = trackerCategoryStore.trackersCategory
         trackers = categories.flatMap { $0.trackers }
-        print("Категории после присваивания: \(categories)")
         collectionView.reloadData()
     }
     
@@ -596,31 +662,18 @@ extension TrackersViewController: NewHabitOrEventViewControllerDelegate {
     func addTracker(_ tracker: Tracker, to category: TrackerCategory) {
         do {
             try trackerStore.addTracker(tracker, with: category)
-            print("Трекер \(tracker.name) добавлен в категорию: \(category.title)")
-            dateChanged()
+            print("TrackersViewController - Трекер \(tracker.name) добавлен в категорию: \(category.title)")
+            datePickerChanged()
         } catch {
-            print("Ошибка при добавлении трекера: \(error.localizedDescription)")
+            print("TrackersViewController - Ошибка при добавлении трекера: \(error.localizedDescription)")
         }
     }
 }
 
 extension TrackersViewController: FiltersViewControllerDelegate {
     func didSelectFilter(selectFilter: TrackerFilter) {
-        applyFilter(selectFilter: selectFilter)
+        currentFilter = selectFilter
+        appSettingsStore.selectedFilter = currentFilter
         updateVisibleCategories()
-    }
-    
-    private func applyFilter(selectFilter: TrackerFilter) {
-        //           switch selectFilter {
-        //           case .allTrackers:
-        //               // Показываем все трекеры
-        //           case .trackersToday:
-        //               // Показываем трекеры на сегодня
-        //           case .completed:
-        //               // Показываем завершенные трекеры
-        //           case .notCompleted:
-        //               // Показываем незавершенные трекеры
-        //           default:
-        //           }
     }
 }
