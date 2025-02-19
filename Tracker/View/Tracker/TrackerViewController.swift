@@ -10,6 +10,7 @@ final class TrackersViewController: UIViewController {
     
     private var appSettingsStore = AppSettingsStore()
     private var currentFilter: TrackerFilter = .allTrackers
+    private var showOnlyCompleted: Bool? = nil
     
     private var newHabitOrEventViewController: NewHabitOrEventViewController!
     private var categories: [TrackerCategory] = []
@@ -289,7 +290,6 @@ final class TrackersViewController: UIViewController {
         let calendar = Calendar.current
         let selectedDayIndex = calendar.component(.weekday, from: currentDate)
         print("Update Visible Categories: selectedDayIndex: \(selectedDayIndex)")
-        
         guard let selectedWeekDay = WeekDay.from(weekdayIndex: selectedDayIndex) else { return }
         
         loadCategories()
@@ -299,49 +299,26 @@ final class TrackersViewController: UIViewController {
         if !pinnedTrackersList.isEmpty {
             newVisibleCategories.append(TrackerCategory(title: "Закрепленные", trackers: pinnedTrackersList))
         }
-        
         let filteredCategories: [TrackerCategory] = categories.compactMap { category in
-            let filteredTrackers: [Tracker] = category.trackers.filter { tracker in
+            let filteredTrackers = category.trackers.filter { tracker in
                 if pinnedTrackersList.contains(where: { $0.id == tracker.id }) {
                     return false
                 }
-                if tracker.schedule.isEmpty {
+                if tracker.schedule.isEmpty || tracker.schedule.contains(selectedWeekDay) {
+                    if let searchText = searchTextField.text?.lowercased(), !searchText.isEmpty {
+                        if !tracker.name.lowercased().contains(searchText) {
+                            return false
+                        }
+                    }
+                    if let showCompleted = showOnlyCompleted {
+                        return (try? trackerRecordStore.isRecordExists(id: tracker.id, date: currentDate)) == showCompleted
+                    }
                     return true
                 }
-                if !tracker.schedule.contains(selectedWeekDay) {
-                    return false
-                }
-                if let searchText = searchTextField.text?.lowercased(), !searchText.isEmpty {
-                    if !tracker.name.lowercased().contains(searchText) {
-                        return false
-                    }
-                }
-                
-                switch currentFilter {
-                case .allTrackers:
-                    return true
-                case .trackersToday:
-//                    datePicker.date = Date()
-                    return true
-                case .completed:
-                    do {
-                        return try trackerRecordStore.isRecordExists(id: tracker.id, date: currentDate)
-                    } catch {
-                        print("Filter - Ошибка при проверке выполнения трекера: \(error)")
-                        return false
-                    }
-                case .notCompleted:
-                    do {
-                        return try !trackerRecordStore.isRecordExists(id: tracker.id, date: currentDate)
-                    } catch {
-                        print("Filter - Ошибка при проверке выполнения трекера: \(error)")
-                        return true
-                    }
-                }
+                return false
             }
             return filteredTrackers.isEmpty ? nil : TrackerCategory(title: category.title, trackers: filteredTrackers)
         }
-        
         newVisibleCategories.append(contentsOf: filteredCategories)
         visibleCategories = newVisibleCategories
         updateErrorImageVisibility()
@@ -714,6 +691,19 @@ extension TrackersViewController: FiltersViewControllerDelegate {
     func didSelectFilter(selectFilter: TrackerFilter) {
         currentFilter = selectFilter
         appSettingsStore.selectedFilter = currentFilter
+
+        switch currentFilter {
+        case .allTrackers:
+            showOnlyCompleted = nil
+        case .trackersToday:
+            currentDate = Date()
+            datePicker.setDate(currentDate, animated: true)
+            showOnlyCompleted = nil
+        case .completed:
+            showOnlyCompleted = true
+        case .notCompleted:
+            showOnlyCompleted = false
+        }
         updateVisibleCategories()
     }
 }
