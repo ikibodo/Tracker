@@ -25,6 +25,9 @@ final class TrackersViewController: UIViewController {
     private let trackerCategoryStore = TrackerCategoryStore()
     private let trackerRecordStore = TrackerRecordStore()
     
+    private let activityIndicator = UIActivityIndicatorView(style: .large)
+    private var isLoading = false
+    
     private struct cellParams {
         let cellCount: Int
         let leftInset: CGFloat
@@ -153,6 +156,11 @@ final class TrackersViewController: UIViewController {
         collectionView.register(TrackerHeaderView.self,
                                 forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader,
                                 withReuseIdentifier: TrackerHeaderView.switchHeaderIdentifier)
+        let filtersButtonHeight: CGFloat = 50
+        let filtersButtonBottomSpacing: CGFloat = 16
+        let totalBottomInset = filtersButtonHeight + filtersButtonBottomSpacing
+        collectionView.contentInset.bottom = totalBottomInset
+        collectionView.verticalScrollIndicatorInsets.bottom = totalBottomInset
         return collectionView
     }()
     
@@ -186,7 +194,7 @@ final class TrackersViewController: UIViewController {
             currentFilter = .allTrackers
             appSettingsStore.selectedFilter = .allTrackers
         }
-        
+        activityIndicator.center = view.center
         setupNavigationBar()
         addSubViews()
         addConstraints()
@@ -211,6 +219,7 @@ final class TrackersViewController: UIViewController {
         view.addSubview(errorSearchLabel)
         view.addSubview(collectionView)
         view.addSubview(filterButton)
+        view.addSubview(activityIndicator)
     }
     
     private func addConstraints() {
@@ -349,8 +358,8 @@ final class TrackersViewController: UIViewController {
         errorSearchImage.isHidden = !(isSearchError || isFilterEmpty)
         errorSearchLabel.isHidden = !(isSearchError || isFilterEmpty)
         
-        errorImage.isHidden = !isNoTrackersForToday
-        errorLabel.isHidden = !isNoTrackersForToday
+        errorImage.isHidden = !isNoTrackersForToday || isSearchError
+        errorLabel.isHidden = !isNoTrackersForToday || isSearchError
         
         filterButton.isHidden = isNoTrackersForToday
         collectionView.isHidden = isNoTrackersForToday || isFilterEmpty || isSearchError
@@ -415,6 +424,37 @@ extension TrackersViewController: UICollectionViewDelegate, UICollectionViewData
         //        print("Создана ячейка для секции \(indexPath.section), элемента \(indexPath.row), с трекером \(tracker.name)")
         return cell
     }
+    func scrollViewDidScroll(_ scrollView: UIScrollView) {
+           let offsetY = scrollView.contentOffset.y
+           let contentHeight = scrollView.contentSize.height
+           let threshold = contentHeight - scrollView.frame.size.height
+           if offsetY > threshold && !isLoading {
+               loadMoreData()
+           }
+       }
+       
+       private func loadMoreData() {
+           startLoading()
+           DispatchQueue.global().async {
+               sleep(1)
+               DispatchQueue.main.async {
+                   self.collectionView.reloadData()
+                   self.stopLoading()
+               }
+           }
+       }
+
+       private func startLoading() {
+           isLoading = true
+           activityIndicator.startAnimating()
+           collectionView.isUserInteractionEnabled = false
+       }
+
+       private func stopLoading() {
+           isLoading = false
+           activityIndicator.stopAnimating()
+           collectionView.isUserInteractionEnabled = true
+       }
     
     private func isTrackerCompletedToday(id: UUID) -> Bool {
         do {
@@ -599,7 +639,7 @@ extension TrackersViewController: TrackerCellDelegate {
     }
     
     private func showDateAlert() {
-        let alert = UIAlertController(title: nil, message: "Нельзя отметить трекер для будущей даты", preferredStyle: .actionSheet)
+        let alert = UIAlertController(title: nil, message: "Отметить трекер выполненым можно для текущей и прошедших дат", preferredStyle: .actionSheet)
         alert.addAction(UIAlertAction(title: "ОК", style: .default, handler: nil))
         present(alert, animated: true, completion: nil)
     }
