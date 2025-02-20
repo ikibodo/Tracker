@@ -151,36 +151,46 @@ extension StatisticsViewController {
                 let date = Calendar.current.startOfDay(for: record.date)
                 completedByDate[date, default: 0] += 1
             }
-            
             totalCompleted = records.count
-            
-            let sortedDates = completedByDate.keys.sorted()
-            
-            for date in sortedDates {
-                if let prev = previousDate, Calendar.current.isDate(date, inSameDayAs: prev.addingTimeInterval(86400)) {
-                    currentStreak += 1
-                } else {
-                    currentStreak = 1
-                }
-                maxStreak = max(maxStreak, currentStreak)
-                previousDate = date
-            }
-            
-            bestStreak = maxStreak
             
             for tracker in trackers {
                 for weekday in tracker.schedule.compactMap({ $0 }) {
                     trackersByWeekday[weekday, default: []].insert(tracker.id)
                 }
             }
-            perfectDays = 0
             
-            for (date, completedCount) in completedByDate {
+            let sortedDates = Array(Set(completedByDate.keys)).sorted()
+            
+            for date in sortedDates {
+                let completedCount = completedByDate[date] ?? 0
                 let weekdayIndex = Calendar.current.component(.weekday, from: date)
-                if let weekday = WeekDay.from(weekdayIndex: weekdayIndex),
-                   let expectedTrackers = trackersByWeekday[weekday],
-                   expectedTrackers.count == completedCount {
-                    perfectDays += 1
+                if let weekday = WeekDay.from(weekdayIndex: weekdayIndex) {
+                    let plannedCount = trackersByWeekday[weekday]?.count ?? 0
+                    if completedCount == plannedCount {
+                        if let prev = previousDate, Calendar.current.isDate(date, inSameDayAs: prev.addingTimeInterval(86400)) {
+                            currentStreak += 1
+                        } else {
+                            currentStreak = 1
+                        }
+                        maxStreak = max(maxStreak, currentStreak)
+                    } else {
+                        currentStreak = 0
+                    }
+                }
+                
+                previousDate = date
+            }
+            bestStreak = maxStreak
+            
+            perfectDays = 0
+            for date in sortedDates {
+                let completedCount = completedByDate[date] ?? 0
+                let weekdayIndex = Calendar.current.component(.weekday, from: date)
+                if let weekday = WeekDay.from(weekdayIndex: weekdayIndex) {
+                    let plannedCount = trackersByWeekday[weekday]?.count ?? 0
+                    if completedCount == plannedCount {
+                        perfectDays += 1
+                    }
                 }
             }
             
@@ -196,7 +206,7 @@ extension StatisticsViewController {
                 self.showStatisticOrError()
             }
         } catch {
-            print("🟡 Ошибка при загрузке данных: \(error)")
+            print("StatisticsViewController - Ошибка при получении данных: \(error)")
         }
     }
 }
