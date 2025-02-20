@@ -210,8 +210,6 @@ final class TrackersViewController: UIViewController {
     }
     
     private func addSubViews() {
-        collectionView.addSubview(errorImage)
-        collectionView.addSubview(errorLabel)
         view.addSubview(descriptionLabel)
         view.addSubview(searchTextField)
         view.addSubview(errorImage)
