@@ -9,7 +9,7 @@ import UIKit
 final class TrackersViewController: UIViewController {
     
     private var appSettingsStore = AppSettingsStore()
-    private var currentFilter: TrackerFilter = .allTrackers
+    private var currentFilter: TrackerFilterType = .allTrackers
     private var showOnlyCompleted: Bool? = nil
     
     private var newHabitOrEventViewController: NewHabitOrEventViewController!
@@ -206,7 +206,6 @@ final class TrackersViewController: UIViewController {
         
         loadCategories()
         datePickerChanged()
-        //              deleteAllData()
     }
     
     private func addSubViews() {
@@ -287,7 +286,6 @@ final class TrackersViewController: UIViewController {
     private func updateVisibleCategories() {
         let calendar = Calendar.current
         let selectedDayIndex = calendar.component(.weekday, from: currentDate)
-        print("Update Visible Categories: selectedDayIndex: \(selectedDayIndex)")
         guard let selectedWeekDay = WeekDay.from(weekdayIndex: selectedDayIndex) else { return }
         
         loadCategories()
@@ -367,7 +365,6 @@ extension TrackersViewController: UITextFieldDelegate {
 
 extension TrackersViewController: UICollectionViewDelegate, UICollectionViewDataSource {
     func numberOfSections(in collectionView: UICollectionView) -> Int {
-        print("Количество секций: \(visibleCategories.count)")
         return visibleCategories.count
     }
     
@@ -387,7 +384,6 @@ extension TrackersViewController: UICollectionViewDelegate, UICollectionViewData
         guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "cell", for: indexPath) as? TrackerCell else { return UICollectionViewCell() }
         
         let tracker = visibleCategories[indexPath.section].trackers[indexPath.row]
-        print("Секция: \(indexPath.section), Элемент: \(indexPath.row)")
         
         let isCompletedToday = isTrackerCompletedToday(id: tracker.id)
         cell.delegate = self
@@ -396,7 +392,6 @@ extension TrackersViewController: UICollectionViewDelegate, UICollectionViewData
         let completedDay = (try? trackerRecordStore.completedDays(for: tracker.id).count) ?? 0
         cell.configure(with: tracker.name, date: currentDate, isPinned: isPinned)
         cell.setupCell(with: tracker, indexPath: indexPath, completedDay: completedDay, isCompletedToday: isCompletedToday)
-        //        print("Создана ячейка для секции \(indexPath.section), элемента \(indexPath.row), с трекером \(tracker.name)")
         return cell
     }
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
@@ -532,7 +527,6 @@ extension TrackersViewController: UICollectionViewDelegate, UICollectionViewData
             if self.trackers.first(where: { $0.id == id }) != nil {
                 do {
                     try self.trackerStore.deleteTracker(id: id)
-                    print("🗑 Трекер с id \(id) успешно удален")
                     self.trackers.removeAll { $0.id == id }
                     self.updateVisibleCategories()
                 } catch {
@@ -596,7 +590,6 @@ extension TrackersViewController: TrackerCellDelegate {
         }
         do {
             try trackerRecordStore.updateRecord(id: id, date: datePicker.date)
-            print("Выполнен трекер с id \(id) о чем создана запись \(datePicker.date)")
         } catch {
             print("Ошибка при обновлении записи в CoreData: \(error)")
         }
@@ -606,7 +599,6 @@ extension TrackersViewController: TrackerCellDelegate {
     func uncompleteTracker(id: UUID, at indexPath: IndexPath) {
         do {
             try trackerRecordStore.deleteRecord(id: id, date: datePicker.date)
-            print("Отмена выполнения трекера с id \(id) - запись удалена")
         } catch {
             print("Ошибка при удалении записи из CoreData: \(error)")
         }
@@ -635,42 +627,6 @@ extension TrackersViewController: TrackerCategoryStoreDelegate {
         updateVisibleCategories()
         collectionView.reloadData()
     }
-    
-    func deleteAllData() {
-        do {
-            let recordsToDelete = try trackerRecordStore.fetchAllRecords()
-            for record in recordsToDelete {
-                let id = record.id
-                let date = record.date
-                try trackerRecordStore.deleteRecord(id: id, date: date)
-                print("🗑 trackerRecordStore - deleteAllData")
-            }
-        } catch {
-            print("Ошибка при удалении записей: \(error)")
-        }
-        
-        do {
-            let trackersToDelete = try trackerStore.fetchAllTrackers()
-            for tracker in trackersToDelete {
-                try trackerStore.deleteTracker(id: tracker.id)
-                print("🗑 trackerStore - deleteAllData")
-            }
-        } catch {
-            print("Ошибка при удалении трекеров: \(error)")
-        }
-        
-        do {
-            let categoriesToDelete = try trackerCategoryStore.fetchAllCategories()
-            for category in categoriesToDelete {
-                try trackerCategoryStore.deleteCategory(category)
-                print("🗑 trackerCategoryStore - deleteAllData")
-            }
-        } catch {
-            print("Ошибка при удалении категорий: \(error)")
-        }
-        categories.removeAll()
-        collectionView.reloadData()
-    }
 }
 
 extension TrackersViewController: NewHabitOrEventViewControllerDelegate {
@@ -686,7 +642,7 @@ extension TrackersViewController: NewHabitOrEventViewControllerDelegate {
 }
 
 extension TrackersViewController: FiltersViewControllerDelegate {
-    func didSelectFilter(selectFilter: TrackerFilter) {
+    func didSelectFilter(selectFilter: TrackerFilterType) {
         currentFilter = selectFilter
         appSettingsStore.selectedFilter = currentFilter
 

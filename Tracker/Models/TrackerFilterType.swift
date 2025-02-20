@@ -6,13 +6,13 @@
 //
 import Foundation
 
-enum TrackerFilter: String, CaseIterable {
+enum TrackerFilterType: String, CaseIterable {
     case allTrackers = "Все трекеры"
     case trackersToday = "Трекеры на сегодня"
     case completed = "Завершённые"
     case notCompleted = "Незавершённые"
     
-    static func from(rawValue: String) -> TrackerFilter? {
-        return TrackerFilter(rawValue: rawValue)
+    static func from(rawValue: String) -> TrackerFilterType? {
+        return TrackerFilterType(rawValue: rawValue)
     }
 }

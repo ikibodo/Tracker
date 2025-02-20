@@ -131,11 +131,9 @@ final class TrackerCategoryStore: NSObject {
         if let scheduleData = trackerCoreData.schedule as? [WeekDay?] {
             schedule = scheduleData.compactMap { $0 }
         }
-// удалить - нужно было для отладки
-//        if schedule.isEmpty {
-//            print("ТrackerCoreData: расписание оказалось пустым после фильтрации.")
-//        }
-//        print("Извлеченное расписание в TrackerCoreData: \(schedule)")
+        if schedule.isEmpty {
+            print("ТrackerCoreData: расписание оказалось пустым после фильтрации.")
+        }
         return Tracker(id: id, name: name, color: color, emoji: emoji, schedule: schedule)
     }
     

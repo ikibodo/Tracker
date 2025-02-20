@@ -8,10 +8,17 @@ import UIKit
 
 final class StatisticsViewController: UIViewController {
     
-    private var points = [6, 2, 5, 4]
-    private var goals = ["Лучший период", "Идеальные дни", "Трекеров завершено", "Среднее значение"]
-//    private var statisticData = [Int]()
-    private var statisticData = [1, 2]
+    private let store = AppSettingsStore()
+    private let trackerRecordStore = TrackerRecordStore()
+    private let trackerStore = TrackerStore()
+    
+    private var points: [Int] = [0, 0, 0, 0]
+    private var goals: [String] = StatisticsType.allCases.map { $0.rawValue }
+    
+    private var bestStreak = 0
+    private var perfectDays = 0
+    private var totalCompleted = 0
+    private var averageCompleted = 0
     
     private lazy var titleLabel: UILabel = {
         let descriptionLabel = UILabel()
@@ -56,9 +63,15 @@ final class StatisticsViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        tabBarItem.title = "Статистика"
         addSubViews()
         addConstraints()
-        showStatisticOrError() 
+        calculateStatistics()
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        calculateStatistics()
     }
     
     private func addSubViews() {
@@ -86,22 +99,18 @@ final class StatisticsViewController: UIViewController {
             tableView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -16)
         ])
     }
+    
     private func showStatisticOrError() {
-            if statisticData.isEmpty {
-                tableView.isHidden = true
-                errorImage.isHidden = false
-                errorLabel.isHidden = false
-            } else {
-                tableView.isHidden = false
-                errorImage.isHidden = true
-                errorLabel.isHidden = true
-            }
-        }
+        let shouldShowError = totalCompleted == 0
+        tableView.isHidden = shouldShowError
+        errorImage.isHidden = !shouldShowError
+        errorLabel.isHidden = !shouldShowError
+    }
 }
 
 extension StatisticsViewController: UITableViewDelegate, UITableViewDataSource {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        4
+        return goals.count
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -114,5 +123,80 @@ extension StatisticsViewController: UITableViewDelegate, UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         102
+    }
+}
+
+extension StatisticsViewController {
+    private func calculateStatistics() {
+        do {
+            let records = try trackerRecordStore.fetchAllRecords()
+            let trackers = try trackerStore.fetchAllTrackers()
+            
+            guard !records.isEmpty else {
+                bestStreak = 0
+                perfectDays = 0
+                totalCompleted = 0
+                averageCompleted = 0
+                store.saveStatistics(bestStreak: bestStreak, perfectDays: perfectDays, totalCompleted: totalCompleted, averageCompleted: averageCompleted)
+                return
+            }
+            
+            var completedByDate: [Date: Int] = [:]
+            var trackersByWeekday: [WeekDay: Set<UUID>] = [:]
+            var currentStreak = 0
+            var maxStreak = 0
+            var previousDate: Date?
+            
+            for record in records {
+                let date = Calendar.current.startOfDay(for: record.date)
+                completedByDate[date, default: 0] += 1
+            }
+            
+            totalCompleted = records.count
+            
+            let sortedDates = completedByDate.keys.sorted()
+            
+            for date in sortedDates {
+                if let prev = previousDate, Calendar.current.isDate(date, inSameDayAs: prev.addingTimeInterval(86400)) {
+                    currentStreak += 1
+                } else {
+                    currentStreak = 1
+                }
+                maxStreak = max(maxStreak, currentStreak)
+                previousDate = date
+            }
+            
+            bestStreak = maxStreak
+            
+            for tracker in trackers {
+                for weekday in tracker.schedule.compactMap({ $0 }) {
+                    trackersByWeekday[weekday, default: []].insert(tracker.id)
+                }
+            }
+            perfectDays = 0
+            
+            for (date, completedCount) in completedByDate {
+                let weekdayIndex = Calendar.current.component(.weekday, from: date)
+                if let weekday = WeekDay.from(weekdayIndex: weekdayIndex),
+                   let expectedTrackers = trackersByWeekday[weekday],
+                   expectedTrackers.count == completedCount {
+                    perfectDays += 1
+                }
+            }
+            
+            let uniqueDays = completedByDate.keys.count
+            averageCompleted = uniqueDays > 0 ? totalCompleted / uniqueDays : 0
+            
+            points = [bestStreak, perfectDays, totalCompleted, averageCompleted]
+            
+            store.saveStatistics(bestStreak: bestStreak, perfectDays: perfectDays, totalCompleted: totalCompleted, averageCompleted: averageCompleted)
+            
+            DispatchQueue.main.async {
+                self.tableView.reloadData()
+                self.showStatisticOrError()
+            }
+        } catch {
+            print("🟡 Ошибка при загрузке данных: \(error)")
+        }
     }
 }

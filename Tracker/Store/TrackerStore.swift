@@ -163,11 +163,9 @@ final class TrackerStore: NSObject, NSFetchedResultsControllerDelegate {
         if let scheduleData = trackerCoreData.schedule as? [WeekDay?] {
             schedule = scheduleData.compactMap { $0 }
         }
-        // удалить - нужно было для отладки
-//        if schedule.isEmpty {
-//            print("TrackerStore: расписание оказалось пустым после фильтрации.")
-//        }
-//        print("TrackerStore Извлеченное расписание в TrackerStore: \(schedule)")
+        if schedule.isEmpty {
+            print("TrackerStore: расписание оказалось пустым после фильтрации.")
+        }
         return Tracker(id: id, name: name, color: color, emoji: emoji, schedule: schedule)
     }
     
