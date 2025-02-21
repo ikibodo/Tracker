@@ -31,6 +31,7 @@ final class FiltersViewController: UIViewController {
     
     private lazy var tableView: UITableView = {
         let tableView = UITableView()
+        tableView.backgroundColor = .ypBackground
         tableView.register(FiltersCell.self, forCellReuseIdentifier: FiltersCell.identifier)
         tableView.layer.cornerRadius = 16
         tableView.layer.maskedCorners = [.layerMaxXMaxYCorner, .layerMaxXMinYCorner, .layerMinXMaxYCorner, .layerMinXMinYCorner]

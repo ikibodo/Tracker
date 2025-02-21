@@ -30,7 +30,7 @@ final class CategoryCell: UITableViewCell {
     private func setupUI() {
         contentView.layer.cornerRadius = 16
         contentView.layer.masksToBounds = true
-        backgroundColor = .ypLightGray.withAlphaComponent(0.3)
+        backgroundColor = .ypBackground
         textLabel?.font = UIFont.systemFont(ofSize: 17, weight: .regular)
         textLabel?.textColor = .ypBlack
         detailTextLabel?.font = UIFont.systemFont(ofSize: 17)

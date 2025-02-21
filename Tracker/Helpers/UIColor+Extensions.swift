@@ -7,7 +7,7 @@
 import UIKit
 
 extension UIColor {
-    static var ypBlack: UIColor { UIColor(named: "Tr  Black") ?? UIColor.black }
+    static var ypBlack: UIColor { UIColor(named: "Tr Black") ?? UIColor.black }
     static var ypBackground: UIColor { UIColor(named: "Tr Background") ?? UIColor.darkGray }
     static var ypWhite: UIColor { UIColor(named: "Tr White") ?? UIColor.white }
     static var ypGreen: UIColor { UIColor(named: "Tr Green") ?? UIColor.green }
@@ -15,6 +15,7 @@ extension UIColor {
     static var ypRed: UIColor { UIColor(named: "Tr Red") ?? UIColor.red }
     static var ypGray: UIColor { UIColor(named: "Tr Gray") ?? UIColor.gray }
     static var ypLightGray: UIColor { UIColor(named: "Tr Light Gray") ?? UIColor.lightGray }
+    static var colorSelected00: UIColor { UIColor(named: "Color Search") ?? UIColor.lightGray }
     static var colorSelected0: UIColor { UIColor(named: "Color datePickLabel") ?? UIColor.lightGray }
     static var colorSelected1: UIColor { UIColor(named: "Color selection 1") ?? UIColor.red}
     static var colorSelected2: UIColor { UIColor(named: "Color selection 2") ?? UIColor.orange }
@@ -47,6 +48,7 @@ let colorDictionary: [String: UIColor] = [
     "Tr Red": .ypRed,
     "Tr Gray": .ypGray,
     "Tr Light Gray": .ypLightGray,
+    "Color Search": .colorSelected00,
     "Color datePickLabel": .colorSelected0,
     "Color selection 1": .colorSelected1,
     "Color selection 2": .colorSelected2,

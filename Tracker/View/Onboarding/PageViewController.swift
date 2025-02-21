@@ -37,7 +37,7 @@ final class PageViewController: UIViewController {
     private lazy var onboardingButton: UIButton = {
         let button = UIButton()
         button.backgroundColor = .ypBlack
-        button.titleLabel?.textColor = .ypWhite
+        button.setTitleColor(.ypWhite, for: .normal)
         button.setTitle("Вот это технологии!", for: .normal)
         button.titleLabel?.font = .systemFont(ofSize: 16)
         button.titleLabel?.textAlignment = .center

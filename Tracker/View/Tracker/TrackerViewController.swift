@@ -58,7 +58,9 @@ final class TrackersViewController: UIViewController {
     
     private lazy var plusButton: UIButton = {
         let plusButton = UIButton(type: .custom)
-        plusButton.setImage(UIImage(named: "Add tracker"), for: .normal)
+        let image = UIImage(named: "Add tracker")?.withRenderingMode(.alwaysTemplate)
+        plusButton.setImage(image, for: .normal)
+        plusButton.tintColor = .ypBlack
         plusButton.translatesAutoresizingMaskIntoConstraints = false
         plusButton.addTarget(self, action: #selector(didTapPlusButton), for: .touchUpInside)
         return plusButton
@@ -75,9 +77,11 @@ final class TrackersViewController: UIViewController {
     
     private lazy var searchTextField: UISearchTextField = {
         let textField = UISearchTextField()
-        textField.textColor = .ypBlack
-        textField.placeholder = "Поиск..."
-        textField.font = .systemFont(ofSize: 17, weight: .regular)
+        let placeholderAttributes: [NSAttributedString.Key: Any] = [
+            .foregroundColor: UIColor.colorSelected00,
+            .font: UIFont.systemFont(ofSize: 17, weight: .regular)
+        ]
+        textField.attributedPlaceholder = NSAttributedString(string: "Поиск", attributes: placeholderAttributes)
         textField.backgroundColor = .clear
         textField.layer.cornerRadius = 10
         textField.layer.masksToBounds = true
@@ -128,6 +132,10 @@ final class TrackersViewController: UIViewController {
         datePicker.datePickerMode = .date
         let localID = Locale.preferredLanguages.first ?? "ru_RU"
         datePicker.locale = Locale(identifier: localID)
+        datePicker.overrideUserInterfaceStyle = .light
+        datePicker.backgroundColor = .colorSelected0
+        datePicker.layer.cornerRadius = 8
+        datePicker.clipsToBounds = true
         datePicker.translatesAutoresizingMaskIntoConstraints = false
         datePicker.addTarget(self, action: #selector(datePickerChanged), for: .valueChanged)
         return datePicker
@@ -170,7 +178,7 @@ final class TrackersViewController: UIViewController {
         button.backgroundColor = .ypBlue
         button.setTitle("Фильтры", for: .normal)
         button.titleLabel?.textColor = .ypWhite
-        button.tintColor = .ypWhite
+        button.overrideUserInterfaceStyle = .light
         button.layer.cornerRadius = 16
         button.titleLabel?.textAlignment = .center
         button.titleLabel?.font = UIFont.systemFont(ofSize: 17, weight: .regular)
@@ -224,10 +232,12 @@ final class TrackersViewController: UIViewController {
         NSLayoutConstraint.activate([
             descriptionLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 1),
             descriptionLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
+            descriptionLabel.heightAnchor.constraint(equalToConstant: 41),
             
             searchTextField.topAnchor.constraint(equalTo: descriptionLabel.bottomAnchor, constant: 7),
             searchTextField.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
             searchTextField.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
+            searchTextField.heightAnchor.constraint(equalToConstant: 36),
             
             errorImage.topAnchor.constraint(equalTo: view.topAnchor, constant: 402),
             errorImage.centerXAnchor.constraint(equalTo: view.centerXAnchor),

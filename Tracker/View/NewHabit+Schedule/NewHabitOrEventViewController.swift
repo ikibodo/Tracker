@@ -46,7 +46,7 @@ final class NewHabitOrEventViewController: UIViewController, ScheduleViewControl
     
     private lazy var trackerNameInput: UITextField = {
         let textField = UITextField()
-        textField.backgroundColor = .ypLightGray.withAlphaComponent(0.3)
+        textField.backgroundColor = .ypBackground
         textField.tintColor = .ypBlack
         textField.textColor =  .ypBlack
         textField.font = .systemFont(ofSize: 17, weight: .regular)
@@ -74,11 +74,13 @@ final class NewHabitOrEventViewController: UIViewController, ScheduleViewControl
     
     private lazy var trackerItems: UITableView = {
         let tableView = UITableView()
+        tableView.backgroundColor = .ypBackground
         tableView.layer.cornerRadius = 16
         tableView.layer.maskedCorners = [.layerMaxXMaxYCorner, .layerMaxXMinYCorner, .layerMinXMaxYCorner, .layerMinXMinYCorner]
         tableView.clipsToBounds = true
         tableView.layer.masksToBounds = true
         tableView.separatorInset = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 16)
+        tableView.separatorColor = .ypGray
         tableView.isScrollEnabled = false
         tableView.translatesAutoresizingMaskIntoConstraints = false
         return tableView
@@ -96,7 +98,7 @@ final class NewHabitOrEventViewController: UIViewController, ScheduleViewControl
         layout.headerReferenceSize = CGSize(width: UIScreen.main.bounds.width, height: 34)
         
         let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
-        collectionView.backgroundColor = .white
+        collectionView.backgroundColor = .ypWhite
         collectionView.register(EmojiCell.self, forCellWithReuseIdentifier: EmojiCell.reuseIdentifier)
         collectionView.register(ColorCell.self, forCellWithReuseIdentifier: ColorCell.reuseIdentifier)
         collectionView.register(CollectionHeaderView.self,
@@ -369,7 +371,7 @@ extension NewHabitOrEventViewController: UITableViewDelegate{
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "cell") ?? UITableViewCell(style: .subtitle, reuseIdentifier: "cell")
         cell.selectionStyle = .none
-        cell.backgroundColor = .ypLightGray.withAlphaComponent(0.3)
+        cell.backgroundColor = .ypBackground
         cell.textLabel?.text = currentItems[indexPath.row]
         cell.textLabel?.font = UIFont.systemFont(ofSize: 17, weight: .regular)
         cell.textLabel?.textColor = .ypBlack

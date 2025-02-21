@@ -28,8 +28,7 @@ final class NewCategoryViewController: UIViewController {
     
     private lazy var categoryNameInput: UITextField = {
         let textField = UITextField()
-        textField.backgroundColor = .ypLightGray.withAlphaComponent(0.3)
-        textField.tintColor = .ypBlack
+        textField.backgroundColor = .ypBackground
         textField.textColor =  .ypBlack
         textField.font = .systemFont(ofSize: 17, weight: .regular)
         textField.placeholder = "Введите название категории"
@@ -45,7 +44,7 @@ final class NewCategoryViewController: UIViewController {
     private lazy var categoryButton: UIButton = {
         let button = UIButton()
         button.backgroundColor = .ypGray
-        button.titleLabel?.textColor = .ypWhite
+        button.setTitleColor( .ypWhite, for: .normal)
         button.setTitle("Готово", for: .normal)
         button.titleLabel?.font = .systemFont(ofSize: 16)
         button.titleLabel?.textAlignment = .center

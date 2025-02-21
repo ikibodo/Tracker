@@ -15,8 +15,7 @@ final class TabBarViewController: UITabBarController {
     
     private func setupTabBar() {
         tabBar.backgroundColor = .ypWhite
-        tabBar.layer.borderWidth = 1
-        tabBar.layer.borderColor = UIColor.ypGray.cgColor
+        tabBar.layer.borderWidth = 0.5
         
         let trackersViewController = TrackersViewController()
         let trackersNavigationController = UINavigationController(rootViewController: trackersViewController)

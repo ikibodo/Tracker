@@ -30,9 +30,9 @@ final class ScheduleViewController: UIViewController {
     private lazy var scheduleView: UITableView = {
         let tableView = UITableView()
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: "DayCell")
+        tableView.backgroundColor = .ypBackground
         tableView.layer.masksToBounds = true
-        tableView.separatorStyle = .singleLine
-        tableView.separatorInset = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 16)
+        tableView.separatorStyle = .none
         tableView.layer.cornerRadius = 16
         tableView.layer.maskedCorners =  [.layerMaxXMaxYCorner,.layerMaxXMinYCorner, .layerMinXMaxYCorner, .layerMinXMinYCorner]
         tableView.clipsToBounds = true
@@ -41,19 +41,18 @@ final class ScheduleViewController: UIViewController {
         return tableView
     }()
     
-    
     private lazy var saveDaysButton: UIButton = {
         let button = UIButton()
         button.backgroundColor = .ypBlack
+        button.setTitleColor(.ypWhite, for: .normal)
         button.setTitle("Готово", for: .normal)
-        button.setTitleColor(.white, for: .normal)
-        button.tintColor = .ypWhite
+        button.titleLabel?.font = .systemFont(ofSize: 16)
+        button.titleLabel?.textAlignment = .center
         button.layer.cornerRadius = 16
         button.translatesAutoresizingMaskIntoConstraints = false
         button.addTarget(self, action: #selector(saveDays), for: .touchUpInside)
         return button
     }()
-    
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -134,11 +133,7 @@ extension ScheduleViewController: UITableViewDataSource {
         cell.textLabel?.font = UIFont.systemFont(ofSize: 17, weight: .regular)
         cell.textLabel?.textColor = .ypBlack
         cell.selectionStyle = .none
-        cell.backgroundColor = .ypLightGray.withAlphaComponent(0.3)
-        
-        if indexPath.row == 6 {
-            cell.separatorInset = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: .greatestFiniteMagnitude)
-        }
+        cell.backgroundColor = .ypBackground
         
         let switchControl = UISwitch()
         switchControl.isOn = schedule.contains(weekDay)
@@ -147,6 +142,18 @@ extension ScheduleViewController: UITableViewDataSource {
         switchControl.tintColor = .ypBlue
         switchControl.onTintColor = .ypBlue
         cell.accessoryView = switchControl
+
+        let separatorImageView = UIView()
+        separatorImageView.backgroundColor = .ypGray
+        separatorImageView.translatesAutoresizingMaskIntoConstraints = false
+        cell.addSubview(separatorImageView)
+        NSLayoutConstraint.activate([
+            separatorImageView.leadingAnchor.constraint(equalTo: cell.leadingAnchor, constant: 16),
+            separatorImageView.trailingAnchor.constraint(equalTo: cell.trailingAnchor, constant: -16),
+            separatorImageView.heightAnchor.constraint(equalToConstant: 0.5),
+            separatorImageView.bottomAnchor.constraint(equalTo: cell.bottomAnchor)
+        ])
+        separatorImageView.isHidden = indexPath.row == WeekDay.allCases.count - 1
         
         return cell
     }
