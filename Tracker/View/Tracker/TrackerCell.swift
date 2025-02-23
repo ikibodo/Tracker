@@ -124,7 +124,7 @@ final class TrackerCell: UICollectionViewCell {
         self.emoji.text = tracker.emoji
         self.titleLabel.text = tracker.name
         
-        let wordDay = dayWord(for: completedDay)
+        let wordDay = TrackerCell.dayWord(for: completedDay)
         dayNumberView.text = "\(completedDay) \(wordDay)"
         
         if isCompletedToday {
@@ -150,7 +150,7 @@ final class TrackerCell: UICollectionViewCell {
         self.isPinned = isPinned
     }
     
-    func dayWord(for number: Int) -> String {
+    static func dayWord(for number: Int) -> String {
         let lastDigit = number % 10
         let lastTwoDigits = number % 100
         

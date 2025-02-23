@@ -520,10 +520,15 @@ extension TrackersViewController: UICollectionViewDelegate, UICollectionViewData
               let tracker = category.trackers.first(where: { $0.id == id }) else {
             return
         }
+        let completedDay = (try? trackerRecordStore.completedDays(for: tracker.id).count) ?? 0
+        let wordDay = TrackerCell.dayWord(for: completedDay)
+        let completedDayText = "\(completedDay) \(wordDay)"
+
         let editTrackerVC = NewHabitOrEventViewController(isForHabits: !tracker.schedule.isEmpty)
         editTrackerVC.editTrackerDelegate = self
         editTrackerVC.editingTracker = tracker
         editTrackerVC.categoryTitle = category.title
+        editTrackerVC.completedDayText = completedDayText
         
         let navigationController = UINavigationController(rootViewController: editTrackerVC)
         navigationController.modalPresentationStyle = .pageSheet

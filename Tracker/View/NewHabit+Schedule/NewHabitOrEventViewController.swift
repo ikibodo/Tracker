@@ -18,8 +18,8 @@ final class NewHabitOrEventViewController: UIViewController, ScheduleViewControl
     
     var editingTracker: Tracker?
     var categoryTitle: String?
+    var completedDayText: String?
     
-    private var trackerItemsTopConstraint: NSLayoutConstraint!
     private var schedule: [WeekDay?] = []
     private let itemsForHabits = ["Категория", "Расписание"]
     private let itemsForEvents = ["Категория"]
@@ -35,11 +35,29 @@ final class NewHabitOrEventViewController: UIViewController, ScheduleViewControl
     private var selectedEmojiIndex: IndexPath?
     private var selectedColorIndex: IndexPath?
     
+    private lazy var trackerNameInputTopConstraint: NSLayoutConstraint = {
+        return trackerNameInput.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 24)
+    }()
+    
+    private lazy var trackerItemsTopConstraint: NSLayoutConstraint = {
+        return trackerItems.topAnchor.constraint(equalTo: trackerNameInput.bottomAnchor, constant: 24)
+    }()
+    
     private lazy var titleLabel: UILabel = {
         let label = UILabel()
         label.textColor = .ypBlack
         label.font = .systemFont(ofSize: 16, weight: .medium)
         label.textAlignment = .center
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+    
+    private lazy var completedDayLabel: UILabel = {
+        let label = UILabel()
+        label.textColor = .ypBlack
+        label.font = .systemFont(ofSize: 32, weight: .bold)
+        label.textAlignment = .center
+        label.isHidden = true
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
@@ -152,7 +170,6 @@ final class NewHabitOrEventViewController: UIViewController, ScheduleViewControl
         super.viewDidLoad()
         view.backgroundColor = .ypWhite
         
-        trackerItems.reloadData()
         trackerItems.delegate = self
         trackerItems.dataSource = self
         collectionView.delegate = self
@@ -165,6 +182,12 @@ final class NewHabitOrEventViewController: UIViewController, ScheduleViewControl
         if editingTracker != nil { editTracker() }
     }
     
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        trackerItems.reloadData()
+        updateLayoutForCompletedDay()
+    }
+
     func didUpdateSchedule(_ schedule: [WeekDay?]) {
         self.schedule = schedule
         validateCreateButtonState()
@@ -193,6 +216,7 @@ final class NewHabitOrEventViewController: UIViewController, ScheduleViewControl
     
     private func addSubViews() {
         view.addSubview(titleLabel)
+        view.addSubview(completedDayLabel)
         view.addSubview(trackerNameInput)
         view.addSubview(limitLabel)
         view.addSubview(trackerItems)
@@ -202,11 +226,17 @@ final class NewHabitOrEventViewController: UIViewController, ScheduleViewControl
     }
     
     private func addConstraints() {
+        trackerNameInputTopConstraint = trackerNameInput.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 24)
+        
         trackerItemsTopConstraint = trackerItems.topAnchor.constraint(equalTo: trackerNameInput.bottomAnchor, constant: 24)
+        
         NSLayoutConstraint.activate([
-            titleLabel.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+            completedDayLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 24),
+            completedDayLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
+            completedDayLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
+            completedDayLabel.heightAnchor.constraint(equalToConstant: 38),
             
-            trackerNameInput.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 16),
+            trackerNameInputTopConstraint,
             trackerNameInput.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
             trackerNameInput.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
             trackerNameInput.heightAnchor.constraint(equalToConstant: 75),
@@ -239,7 +269,22 @@ final class NewHabitOrEventViewController: UIViewController, ScheduleViewControl
         ])
     }
     
-    private func updateConstraints() {
+    private func updateLayoutForCompletedDay() {
+        if let completedText = completedDayText, !completedText.isEmpty {
+            completedDayLabel.text = completedDayText
+            completedDayLabel.isHidden = false
+            trackerNameInputTopConstraint.constant = 102
+        } else {
+            completedDayLabel.isHidden = true
+            trackerNameInputTopConstraint.constant = 24
+        }
+        trackerNameInputTopConstraint.isActive = true
+        UIView.animate(withDuration: 0.3, delay: 0, options: [.curveEaseInOut], animations: {
+                self.view.layoutIfNeeded()
+            })
+    }
+
+    private func updateTrackerItemsConstraint() {
         if limitLabel.isHidden {
             trackerItemsTopConstraint.isActive = false
             trackerItemsTopConstraint = trackerItems.topAnchor.constraint(equalTo: trackerNameInput.bottomAnchor, constant: 24)
@@ -248,7 +293,6 @@ final class NewHabitOrEventViewController: UIViewController, ScheduleViewControl
             trackerItemsTopConstraint = trackerItems.topAnchor.constraint(equalTo: limitLabel.bottomAnchor, constant: 32)
         }
         trackerItemsTopConstraint.isActive = true
-        
         UIView.animate(withDuration: 0.2) {
             self.view.layoutIfNeeded()
         }
@@ -321,7 +365,7 @@ extension NewHabitOrEventViewController: UITextFieldDelegate {
         let updatedText = currentText.replacingCharacters(in: range, with: string)
         let maxSymbolNumber = 38
         limitLabel.isHidden = !(updatedText.count >= maxSymbolNumber)
-        updateConstraints()
+        updateTrackerItemsConstraint()
         return true
     }
 }
