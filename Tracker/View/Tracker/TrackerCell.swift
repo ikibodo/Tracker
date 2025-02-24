@@ -231,5 +231,6 @@ final class TrackerCell: UICollectionViewCell {
         } else {
             delegate?.completeTracker(id: trackerId, at: indexPath)
         }
+        AnalyticsService.tapTrack()
     }
 }

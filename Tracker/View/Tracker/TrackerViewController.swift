@@ -214,6 +214,12 @@ final class TrackersViewController: UIViewController {
         
         loadCategories()
         datePickerChanged()
+        AnalyticsService.openScreen()
+    }
+    
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        AnalyticsService.closeScreen()
     }
     
     private func addSubViews() {
@@ -273,6 +279,7 @@ final class TrackersViewController: UIViewController {
     // MARK: - Actions
     
     @objc private func didTapPlusButton() {
+        AnalyticsService.tapAddTrack()
         let viewController = TrackerTypeViewController()
         viewController.delegate = self
         let navigationController = UINavigationController(rootViewController: viewController)
@@ -281,6 +288,7 @@ final class TrackersViewController: UIViewController {
     }
     
     @objc private func filterButtonTapped() {
+        AnalyticsService.tapFilter()
         let viewController = FiltersViewController()
         viewController.delegate = self
         let navigationController = UINavigationController(rootViewController: viewController)
@@ -337,7 +345,7 @@ final class TrackersViewController: UIViewController {
         let isFilterEmpty = isEmpty && currentFilter != .allTrackers
         let isNoTrackersForToday = isEmpty && currentFilter == .allTrackers
         let isSearchError = isEmpty && !(searchTextField.text?.isEmpty ?? true)
-
+        
         errorSearchImage.isHidden = !(isSearchError || isFilterEmpty)
         errorSearchLabel.isHidden = !(isSearchError || isFilterEmpty)
         
@@ -405,36 +413,36 @@ extension TrackersViewController: UICollectionViewDelegate, UICollectionViewData
         return cell
     }
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
-           let offsetY = scrollView.contentOffset.y
-           let contentHeight = scrollView.contentSize.height
-           let threshold = contentHeight - scrollView.frame.size.height
-           if offsetY > threshold && !isLoading {
-               loadMoreData()
-           }
-       }
-       
-       private func loadMoreData() {
-           startLoading()
-           DispatchQueue.global().async {
-               sleep(1)
-               DispatchQueue.main.async {
-                   self.collectionView.reloadData()
-                   self.stopLoading()
-               }
-           }
-       }
-
-       private func startLoading() {
-           isLoading = true
-           activityIndicator.startAnimating()
-           collectionView.isUserInteractionEnabled = false
-       }
-
-       private func stopLoading() {
-           isLoading = false
-           activityIndicator.stopAnimating()
-           collectionView.isUserInteractionEnabled = true
-       }
+        let offsetY = scrollView.contentOffset.y
+        let contentHeight = scrollView.contentSize.height
+        let threshold = contentHeight - scrollView.frame.size.height
+        if offsetY > threshold && !isLoading {
+            loadMoreData()
+        }
+    }
+    
+    private func loadMoreData() {
+        startLoading()
+        DispatchQueue.global().async {
+            sleep(1)
+            DispatchQueue.main.async {
+                self.collectionView.reloadData()
+                self.stopLoading()
+            }
+        }
+    }
+    
+    private func startLoading() {
+        isLoading = true
+        activityIndicator.startAnimating()
+        collectionView.isUserInteractionEnabled = false
+    }
+    
+    private func stopLoading() {
+        isLoading = false
+        activityIndicator.stopAnimating()
+        collectionView.isUserInteractionEnabled = true
+    }
     
     private func isTrackerCompletedToday(id: UUID) -> Bool {
         do {
@@ -469,10 +477,12 @@ extension TrackersViewController: UICollectionViewDelegate, UICollectionViewData
         
         let editAction = UIAction(title: "Редактировать", handler: { _ in
             self.editTracker(id: tracker.id, at: indexPath)
+            AnalyticsService.tapEdit()
         })
         
         let deleteAction = UIAction(title: "Удалить", attributes: .destructive, handler: { _ in
             self.showDeleteTrackerAlert(id: tracker.id, at: indexPath)
+            AnalyticsService.tapDelete()
         })
         
         return UIContextMenuConfiguration(identifier: nil, previewProvider: nil) { _ in
@@ -523,7 +533,7 @@ extension TrackersViewController: UICollectionViewDelegate, UICollectionViewData
         let completedDay = (try? trackerRecordStore.completedDays(for: tracker.id).count) ?? 0
         let wordDay = TrackerCell.dayWord(for: completedDay)
         let completedDayText = "\(completedDay) \(wordDay)"
-
+        
         let editTrackerVC = NewHabitOrEventViewController(isForHabits: !tracker.schedule.isEmpty)
         editTrackerVC.editTrackerDelegate = self
         editTrackerVC.editingTracker = tracker
@@ -660,7 +670,7 @@ extension TrackersViewController: FiltersViewControllerDelegate {
     func didSelectFilter(selectFilter: TrackerFilterType) {
         currentFilter = selectFilter
         appSettingsStore.selectedFilter = currentFilter
-
+        
         switch currentFilter {
         case .allTrackers:
             showOnlyCompleted = nil
