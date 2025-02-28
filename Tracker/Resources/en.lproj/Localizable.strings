@@ -1,0 +1,17 @@
+/* 
+  Localizable.strings
+  Tracker
+
+  Created by N L on 22.2.25..
+  
+*/
+"trackers.title" = "Trackers";
+"buttonFilters.title" = "Filters";
+
+"tabbar.trackers" = "Trackers";
+"tabbar.statistics" = "Statistics";
+
+"oneDay" = "day";
+"fewDays" = "days";
+"manyDays" = "days";
+

@@ -15,13 +15,12 @@ final class TabBarViewController: UITabBarController {
     
     private func setupTabBar() {
         tabBar.backgroundColor = .ypWhite
-        tabBar.layer.borderWidth = 1
-        tabBar.layer.borderColor = UIColor.ypGray.cgColor
+        tabBar.layer.borderWidth = 0.5
         
         let trackersViewController = TrackersViewController()
         let trackersNavigationController = UINavigationController(rootViewController: trackersViewController)
         trackersNavigationController.tabBarItem = UITabBarItem(
-            title: "Трекеры",
+            title: "tabbar.trackers".localized,
             image: UIImage(named: "Disc"),
             tag: 0)
         
@@ -29,7 +28,7 @@ final class TabBarViewController: UITabBarController {
         let statisticsViewController = StatisticsViewController()
         let statisticsNavigationController = UINavigationController(rootViewController: statisticsViewController)
         statisticsNavigationController.tabBarItem = UITabBarItem(
-            title: "Статистика",
+            title: "tabbar.statistics".localized,
             image: UIImage(named: "Rabbit"),
             tag: 1)
         

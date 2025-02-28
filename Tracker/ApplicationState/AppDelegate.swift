@@ -18,6 +18,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         window = UIWindow()
         window?.rootViewController = UIViewController()
         window?.makeKeyAndVisible()
+        
+        AnalyticsService.activate()
         return true
     }
     

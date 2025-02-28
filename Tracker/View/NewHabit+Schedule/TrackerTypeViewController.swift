@@ -24,7 +24,7 @@ final class TrackerTypeViewController: UIViewController {
     private lazy var habitsButton: UIButton = {
         let button = UIButton()
         button.backgroundColor = .ypBlack
-        button.titleLabel?.textColor = .ypWhite
+        button.setTitleColor(.ypWhite, for: .normal)
         button.setTitle("Привычка", for: .normal)
         button.titleLabel?.font = .systemFont(ofSize: 16)
         button.titleLabel?.textAlignment = .center
@@ -37,7 +37,7 @@ final class TrackerTypeViewController: UIViewController {
     private lazy var eventsButton: UIButton = {
         let button = UIButton()
         button.backgroundColor = .ypBlack
-        button.titleLabel?.textColor = .ypWhite
+        button.setTitleColor(.ypWhite, for: .normal) 
         button.setTitle("Нерегулярное событие", for: .normal)
         button.titleLabel?.font = .systemFont(ofSize: 16)
         button.titleLabel?.textAlignment = .center

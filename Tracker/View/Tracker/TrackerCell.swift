@@ -17,11 +17,16 @@ final class TrackerCell: UICollectionViewCell {
     
     var currentDate: Date?
     var trackerId: UUID?
+    var isPinned: Bool = false {
+        didSet {
+            updatePinVisibility(shouldShowPin: isPinned)
+        }
+    }
     
     private var indexPath: IndexPath?
-    
+    private var blurEffectView: UIVisualEffectView?
     private var isCompletedToday = false
-    private let doneImage = UIImage(named: "Done")
+    private let doneImage = UIImage(named: "Done")?.withRenderingMode(.alwaysTemplate)
     private let plusImage = UIImage(named: "Plus")
     
     var  topContainerView: UIView = {
@@ -42,6 +47,7 @@ final class TrackerCell: UICollectionViewCell {
         let label = UILabel()
         label.font = .systemFont(ofSize: 12, weight: .medium)
         label.textColor = .ypWhite
+        label.overrideUserInterfaceStyle = .light
         label.textAlignment = .left
         label.numberOfLines = 2
         label.translatesAutoresizingMaskIntoConstraints = false
@@ -51,11 +57,21 @@ final class TrackerCell: UICollectionViewCell {
     private lazy var emojiView: UIView = {
         let view = UIView()
         view.backgroundColor = .ypWhite.withAlphaComponent(0.3)
+        view.overrideUserInterfaceStyle = .light
         view.clipsToBounds = true
         view.layer.cornerRadius = 24 / 2
         view.layer.masksToBounds = true
         view.translatesAutoresizingMaskIntoConstraints = false
         return view
+    }()
+    
+    private let pin: UIImageView = {
+        let imageView = UIImageView()
+        imageView.image = UIImage(named: "Pin")
+        imageView.contentMode = .scaleAspectFit
+        imageView.translatesAutoresizingMaskIntoConstraints = false
+        imageView.isHidden = true
+        return imageView
     }()
     
     var emoji: UILabel = {
@@ -97,6 +113,65 @@ final class TrackerCell: UICollectionViewCell {
         fatalError("init(coder:) has not been implemented")
     }
     
+    func setupCell(with tracker: Tracker, indexPath: IndexPath, completedDay: Int, isCompletedToday: Bool) {
+        self.trackerId = tracker.id
+        self.isCompletedToday = isCompletedToday
+        self.indexPath = indexPath
+        
+        self.contentView.backgroundColor = .ypWhite
+        self.topContainerView.backgroundColor = tracker.color
+        
+        self.emoji.text = tracker.emoji
+        self.titleLabel.text = tracker.name
+        
+        let wordDay = TrackerCell.dayWord(for: completedDay)
+        dayNumberView.text = "\(completedDay) \(wordDay)"
+        
+        if isCompletedToday {
+            actionButton.tintColor = .ypWhite
+            actionButton.backgroundColor = tracker.color
+            actionButton.alpha = 0.3
+        } else {
+            actionButton.tintColor = tracker.color
+            actionButton.backgroundColor = .ypWhite
+            actionButton.alpha = 1
+        }
+        
+        let image = isCompletedToday ? doneImage : plusImage
+        actionButton.setImage(image, for: .normal)
+        if actionButton.image(for: .normal) == nil {
+            print("Изображение не установлено для кнопки!")
+        }
+    }
+    
+    func configure(with title: String, date: Date, isPinned: Bool) {
+        titleLabel.text = title
+        self.currentDate = date
+        self.isPinned = isPinned
+    }
+    
+    static func dayWord(for number: Int) -> String {
+        let lastDigit = number % 10
+        let lastTwoDigits = number % 100
+        
+        if lastTwoDigits >= 11 && lastTwoDigits <= 19 {
+            return "manyDays".localized
+        }
+        
+        switch lastDigit {
+        case 1:
+            return "oneDay".localized
+        case 2, 3, 4:
+            return "fewDays".localized
+        default:
+            return "manyDays".localized
+        }
+    }
+    
+    func updatePinVisibility(shouldShowPin: Bool) {
+        pin.isHidden = !shouldShowPin
+    }
+    
     private func addSubview() {
         contentView.addSubview(topContainerView)
         contentView.addSubview(bottomContainerView)
@@ -104,6 +179,7 @@ final class TrackerCell: UICollectionViewCell {
         topContainerView.addSubview(emojiView)
         topContainerView.addSubview(emoji)
         topContainerView.addSubview(titleLabel)
+        topContainerView.addSubview(pin)
         
         bottomContainerView.addSubview(actionButton)
         bottomContainerView.addSubview(dayNumberView)
@@ -129,6 +205,9 @@ final class TrackerCell: UICollectionViewCell {
             emoji.centerXAnchor.constraint(equalTo: emojiView.centerXAnchor),
             emoji.centerYAnchor.constraint(equalTo: emojiView.centerYAnchor),
             
+            pin.centerYAnchor.constraint(equalTo: emojiView.centerYAnchor),
+            pin.trailingAnchor.constraint(equalTo: topContainerView.trailingAnchor, constant: -12),
+            
             titleLabel.leadingAnchor.constraint(equalTo: topContainerView.leadingAnchor, constant: 12),
             titleLabel.trailingAnchor.constraint(equalTo: topContainerView.trailingAnchor, constant: -12),
             titleLabel.bottomAnchor.constraint(equalTo: topContainerView.bottomAnchor, constant: -12),
@@ -143,60 +222,6 @@ final class TrackerCell: UICollectionViewCell {
         ])
     }
     
-    func setupCell(with tracker: Tracker, indexPath: IndexPath, completedDay: Int, isCompletedToday: Bool) {
-        self.trackerId = tracker.id
-        self.isCompletedToday = isCompletedToday
-        self.indexPath = indexPath
-        
-        self.contentView.backgroundColor = .ypWhite
-        self.topContainerView.backgroundColor = tracker.color
-        
-        self.emoji.text = tracker.emoji
-        self.titleLabel.text = tracker.name
-        
-        let wordDay = dayWord(for: completedDay)
-        dayNumberView.text = "\(completedDay) \(wordDay)"
-        
-        if isCompletedToday {
-            actionButton.tintColor = .ypWhite
-            actionButton.backgroundColor = tracker.color
-            actionButton.alpha = 0.3
-        } else {
-            actionButton.tintColor = tracker.color
-            actionButton.backgroundColor = .ypWhite
-            actionButton.alpha = 1
-        }
-        
-        let image = isCompletedToday ? doneImage : plusImage
-        actionButton.setImage(image, for: .normal)
-        if actionButton.image(for: .normal) == nil {
-            print("Изображение не установлено для кнопки!")
-        }
-    }
-    
-    func configure(with title: String, date: Date) {
-        titleLabel.text = title
-        self.currentDate = date
-    }
-    
-    func dayWord(for number: Int) -> String {
-        let lastDigit = number % 10
-        let lastTwoDigits = number % 100
-        
-        if lastTwoDigits >= 11 && lastTwoDigits <= 19 {
-            return "дней"
-        }
-        
-        switch lastDigit {
-        case 1:
-            return "день"
-        case 2, 3, 4:
-            return "дня"
-        default:
-            return "дней"
-        }
-    }
-    
     @objc private func buttonTapped() {
         guard let trackerId = trackerId, let indexPath = indexPath else {
             print("Нет ID трекера")
@@ -206,5 +231,6 @@ final class TrackerCell: UICollectionViewCell {
         } else {
             delegate?.completeTracker(id: trackerId, at: indexPath)
         }
+        AnalyticsService.tapTrack()
     }
 }

@@ -10,6 +10,7 @@ import CoreData
 final class TrackerStore: NSObject, NSFetchedResultsControllerDelegate {
     private let context: NSManagedObjectContext
     private var fetchedResultsController: NSFetchedResultsController<TrackerCoreData>?
+    private var pinnedTrackers: Set<UUID> = []
     
     convenience override init() {
         guard let appDelegate = UIApplication.shared.delegate as? AppDelegate else {
@@ -26,11 +27,22 @@ final class TrackerStore: NSObject, NSFetchedResultsControllerDelegate {
     }
     
     func addTracker(_ tracker: Tracker, with category: TrackerCategory) throws {
-        let trackerCoreData = TrackerCoreData(context: context)
-        updateTrackers(trackerCoreData, with: tracker)
+        let fetchRequest: NSFetchRequest<TrackerCoreData> = TrackerCoreData.fetchRequest()
+        fetchRequest.predicate = NSPredicate(format: "id == %@", tracker.id as CVarArg)
+        let existingTrackers = try context.fetch(fetchRequest)
+        let trackerCoreData: TrackerCoreData
+        
+        if let existingTrackerCoreData = existingTrackers.first {
+            trackerCoreData = existingTrackerCoreData
+            updateTrackers(trackerCoreData, with: tracker)
+            print("Трекер \(tracker.name) обновлен в Core Data")
+        } else {
+            trackerCoreData = TrackerCoreData(context: context)
+            updateTrackers(trackerCoreData, with: tracker)
+            print("Трекер \(tracker.name) добавлен в Core Data")
+        }
         let categoryToAdd = try fetchCategory(with: category.title) ?? createNewCategory(with: category.title)
         categoryToAdd.addToTracker(trackerCoreData)
-        print("Трекер добавлен в категорию \(categoryToAdd.title ?? "неизвестная категория")")
         saveContext()
     }
     
@@ -47,14 +59,80 @@ final class TrackerStore: NSObject, NSFetchedResultsControllerDelegate {
         }
     }
     
-    func deleteTracker(_ tracker: Tracker) throws {
-        let fetchRequest: NSFetchRequest<TrackerCoreData> = TrackerCoreData.fetchRequest()
-        fetchRequest.predicate = NSPredicate(format: "id == %@", tracker.id as CVarArg)
-        guard let trackerToDelete = try context.fetch(fetchRequest).first else { return }
-            context.perform {
-                self.context.delete(trackerToDelete)
-                self.saveContext()
+    func pinTracker(id: UUID) throws {
+        guard let trackerCoreData = try fetchTrackerCoreData(by: id) else { return }
+        if !pinnedTrackers.contains(id) {
+            pinnedTrackers.insert(id)
+            let originalCategory = trackerCoreData.category?.title
+            trackerCoreData.isPinned = true
+            trackerCoreData.originalCategory = originalCategory
+            try updateTrackerCategory(trackerCoreData, categoryTitle: "Закрепленные")
+            saveContext()
+        }
+    }
+    
+    func unpinTracker(id: UUID) throws {
+        guard let trackerCoreData = try fetchTrackerCoreData(by: id) else { return }
+        if pinnedTrackers.contains(id) {
+            pinnedTrackers.remove(id)
+            if let originalCategory = trackerCoreData.originalCategory {
+                try updateTrackerCategory(trackerCoreData, categoryTitle: originalCategory)
             }
+            trackerCoreData.isPinned = false
+            trackerCoreData.originalCategory = nil
+            saveContext()
+        }
+    }
+    
+    func fetchPinnedTrackers() -> [Tracker] {
+        let fetchRequest: NSFetchRequest<TrackerCoreData> = TrackerCoreData.fetchRequest()
+        fetchRequest.predicate = NSPredicate(format: "isPinned == YES")
+        do {
+            let results = try context.fetch(fetchRequest)
+            return results.compactMap { try? createTracker(from: $0) }
+        } catch {
+            print("Ошибка при получении закрепленных трекеров: \(error)")
+            return []
+        }
+    }
+    
+    func isTrackerPinned(id: UUID) -> Bool {
+        let fetchRequest: NSFetchRequest<TrackerCoreData> = TrackerCoreData.fetchRequest()
+        fetchRequest.predicate = NSPredicate(format: "id == %@", id as CVarArg)
+        
+        do {
+            if let tracker = try context.fetch(fetchRequest).first {
+                return tracker.isPinned
+            }
+        } catch {
+            print("Ошибка при получении состояния isPinned для трекера \(id): \(error)")
+        }
+        return false
+    }
+    
+    func deleteTracker(id: UUID) throws {
+        let fetchRequest: NSFetchRequest<TrackerCoreData> = TrackerCoreData.fetchRequest()
+        fetchRequest.predicate = NSPredicate(format: "id == %@", id as CVarArg)
+        
+        guard let trackerToDelete = try context.fetch(fetchRequest).first else {
+            throw NSError(domain: "TrackerStoreError", code: 404, userInfo: [NSLocalizedDescriptionKey: "Трекер с id \(id) не найден"])
+        }
+        context.perform {
+            self.context.delete(trackerToDelete)
+            self.saveContext()
+        }
+    }
+    
+    private func updateTrackerCategory(_ trackerCoreData: TrackerCoreData, categoryTitle: String) throws {
+        let category = try fetchCategory(with: categoryTitle) ?? createNewCategory(with: categoryTitle)
+        category.addToTracker(trackerCoreData)
+        saveContext()
+    }
+    
+    private func fetchTrackerCoreData(by id: UUID) throws -> TrackerCoreData? {
+        let fetchRequest: NSFetchRequest<TrackerCoreData> = TrackerCoreData.fetchRequest()
+        fetchRequest.predicate = NSPredicate(format: "id == %@", id as CVarArg)
+        return try context.fetch(fetchRequest).first
     }
     
     private func updateTrackers(_ trackerCoreData: TrackerCoreData, with tracker: Tracker) {
@@ -63,16 +141,10 @@ final class TrackerStore: NSObject, NSFetchedResultsControllerDelegate {
         trackerCoreData.name = tracker.name
         trackerCoreData.color = colorString
         trackerCoreData.emoji = tracker.emoji
-        print("updateTrackers - Исходное schedule перед трансформацией: \(tracker.schedule)")
-        if let transformedSchedule = DaysValueTransformer().transformedValue(tracker.schedule) as? NSObject {
-            trackerCoreData.schedule = transformedSchedule
-            print("updateTrackers - Успешно сохраненное schedule: \(transformedSchedule)")
-        } else {
-            print("updateTrackers - Ошибка преобразования расписания! Schedule не сохранен")
-            trackerCoreData.schedule = nil
-        }
+        print("TrackerStore updateTrackers - Исходное schedule перед трансформацией: \(tracker.schedule)")
+        trackerCoreData.schedule = tracker.schedule as NSObject
     }
-
+    
     private func createTracker(from trackerCoreData: TrackerCoreData) throws -> Tracker {
         guard let id = trackerCoreData.id ?? UUID() as UUID?,
               let name = trackerCoreData.name else {
@@ -87,13 +159,12 @@ final class TrackerStore: NSObject, NSFetchedResultsControllerDelegate {
         }
         
         let emoji = trackerCoreData.emoji ?? ""
-        
-        let schedule: [WeekDay]
-        if let scheduleData = trackerCoreData.schedule,
-           let transformedSchedule = DaysValueTransformer().reverseTransformedValue(scheduleData) as? [WeekDay] {
-            schedule = transformedSchedule
-        } else {
-            schedule = []
+        var schedule: [WeekDay] = []
+        if let scheduleData = trackerCoreData.schedule as? [WeekDay?] {
+            schedule = scheduleData.compactMap { $0 }
+        }
+        if schedule.isEmpty {
+            print("TrackerStore: расписание оказалось пустым после фильтрации.")
         }
         return Tracker(id: id, name: name, color: color, emoji: emoji, schedule: schedule)
     }

@@ -48,6 +48,16 @@ final class CategoryViewModel {
         selectedCategory = category
     }
     
+    func deleteCategory(_ category: String) {
+        do {
+            let categoryToDelete = TrackerCategory(title: category, trackers: [])
+            try categoryStore.deleteCategory(categoryToDelete)
+            loadCategories()
+        } catch {
+            onError?("CategoryViewModel - Ошибка удаления категории: \(error)")
+        }
+    }
+
     private func loadCategories() {
         do {
             let storedCategories = try categoryStore.fetchAllCategories()

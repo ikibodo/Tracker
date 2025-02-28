@@ -14,14 +14,13 @@ final class CategoryViewController: UIViewController {
     
     weak var delegate: CategoryViewControllerDelegate?
     
-//    private var categoryViewModel = CategoryViewModel()
     private var categoryViewModel: CategoryViewModel
     
     init(categoryViewModel: CategoryViewModel) {
         self.categoryViewModel = categoryViewModel
         super.init(nibName: nil, bundle: nil)
     }
-
+    
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
@@ -57,6 +56,7 @@ final class CategoryViewController: UIViewController {
     
     private lazy var tableView: UITableView = {
         let tableView = UITableView()
+        tableView.backgroundColor = .ypBackground
         tableView.register(CategoryCell.self, forCellReuseIdentifier: CategoryCell.identifier)
         tableView.layer.cornerRadius = 16
         tableView.layer.maskedCorners = [.layerMaxXMaxYCorner, .layerMaxXMinYCorner, .layerMinXMaxYCorner, .layerMinXMinYCorner]
@@ -64,6 +64,7 @@ final class CategoryViewController: UIViewController {
         tableView.layer.masksToBounds = true
         tableView.separatorInset = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 16)
         tableView.separatorStyle = .singleLine
+        tableView.separatorColor = .ypGray
         tableView.translatesAutoresizingMaskIntoConstraints = false
         return tableView
     }()
@@ -71,7 +72,7 @@ final class CategoryViewController: UIViewController {
     private lazy var categoryButton: UIButton = {
         let button = UIButton()
         button.backgroundColor = .ypBlack
-        button.titleLabel?.textColor = .ypWhite
+        button.setTitleColor(.ypWhite, for: .normal) 
         button.setTitle("Добавить категорию", for: .normal)
         button.titleLabel?.font = .systemFont(ofSize: 16)
         button.titleLabel?.textAlignment = .center
@@ -103,6 +104,7 @@ final class CategoryViewController: UIViewController {
     private func setupNavigationBar() {
         guard let navigationBar = navigationController?.navigationBar else { return }
         navigationBar.topItem?.titleView = titleLabel
+        titleLabel.sizeToFit()
     }
     
     private func addSubViews() {
@@ -115,8 +117,6 @@ final class CategoryViewController: UIViewController {
     
     private func addConstraints() {
         NSLayoutConstraint.activate([
-            titleLabel.centerYAnchor.constraint(equalTo: view.centerYAnchor),
-            
             placeholderImage.centerYAnchor.constraint(equalTo: view.centerYAnchor),
             placeholderImage.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             
@@ -207,6 +207,41 @@ extension CategoryViewController: UITableViewDelegate, UITableViewDataSource {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
             self.dismiss(animated: true, completion: nil)
         }
+    }
+    
+    func tableView(_ tableView: UITableView, contextMenuConfigurationForRowAt indexPath: IndexPath, point: CGPoint) -> UIContextMenuConfiguration? {
+        let category = categoryViewModel.getCategories()[indexPath.row]
+        
+        let editAction = UIAction(title: "Редактировать", handler: { _ in
+            // TODO редактирование категории
+        })
+        
+        let deleteAction = UIAction(title: "Удалить", attributes: .destructive, handler: { _ in
+            self.showDeleteCategoryAlert {
+                self.categoryViewModel.deleteCategory(category)
+                self.updateTableViewHeight()
+                tableView.reloadData()
+                self.showContentOrPlaceholder()
+            }
+        })
+        
+        return UIContextMenuConfiguration(identifier: nil, previewProvider: nil) { _ in
+            return UIMenu(title: "", children: [editAction, deleteAction])
+        }
+    }
+    
+    private func showDeleteCategoryAlert(confirmHandler: @escaping () -> Void) {
+        let alert = UIAlertController(title: "Эта категория точно не нужна?", message: nil, preferredStyle: .actionSheet)
+        
+        let deleteAction = UIAlertAction(title: "Удалить", style: .destructive) { _ in
+            confirmHandler()
+        }
+        
+        let cancelAction = UIAlertAction(title: "Отменить", style: .cancel, handler: nil)
+        
+        alert.addAction(deleteAction)
+        alert.addAction(cancelAction)
+        present(alert, animated: true, completion: nil)
     }
 }
 
