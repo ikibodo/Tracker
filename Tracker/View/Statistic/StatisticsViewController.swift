@@ -8,7 +8,7 @@ import UIKit
 
 final class StatisticsViewController: UIViewController {
     
-    private let store = AppSettingsStore()
+    private let store = AppSettingsStore.shared
     private let trackerRecordStore = TrackerRecordStore()
     private let trackerStore = TrackerStore()
     

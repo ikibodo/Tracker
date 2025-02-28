@@ -5,7 +5,6 @@
 //  Created by N L on 19.2.25..
 //
 import UIKit
-import UIKit
 
 final class StatisticsCell: UITableViewCell {
     static let identifier = "StatisticsCell"

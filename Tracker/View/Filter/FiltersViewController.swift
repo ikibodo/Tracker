@@ -14,7 +14,7 @@ final class FiltersViewController: UIViewController {
     
     weak var delegate: FiltersViewControllerDelegate?
     
-    private var appSettingsStore = AppSettingsStore()
+    private var appSettingsStore = AppSettingsStore.shared
     
     private var filterList: [TrackerFilterType] = TrackerFilterType.allCases
     private var selectedFilter: TrackerFilterType?

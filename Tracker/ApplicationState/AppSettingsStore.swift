@@ -7,50 +7,54 @@
 import Foundation
 
 final class AppSettingsStore {
+    static let shared = AppSettingsStore()
     
     private let userDefaults: UserDefaults
-    private enum Keys {
-        static let bestStreak = "bestStreak"
-        static let perfectDays = "perfectDays"
-        static let totalCompleted = "totalCompleted"
-        static let averageCompleted = "averageCompleted"
+    
+    private enum Key: String {
+        case bestStreak
+        case perfectDays
+        case totalCompleted
+        case averageCompleted
+        case hasSeenOnboarding
+        case selectedFilter
     }
     
-    init(userDefaults: UserDefaults = .standard) {
+    private init(userDefaults: UserDefaults = .standard) {
         self.userDefaults = userDefaults
     }
     
     var hasSeenOnboarding: Bool {
         get {
-            return userDefaults.bool(forKey: "hasSeenOnboarding")
+            return userDefaults.bool(forKey: Key.hasSeenOnboarding.rawValue)
         }
         set {
-            userDefaults.set(newValue, forKey: "hasSeenOnboarding")
+            userDefaults.set(newValue, forKey: Key.hasSeenOnboarding.rawValue)
         }
     }
     
     var selectedFilter: TrackerFilterType? {
         get {
-            guard let rawValue = userDefaults.string(forKey: "selectedFilter") else { return nil }
+            guard let rawValue = userDefaults.string(forKey: Key.selectedFilter.rawValue) else { return nil }
             return TrackerFilterType(rawValue: rawValue)
         }
         set {
-            userDefaults.set(newValue?.rawValue, forKey: "selectedFilter")
+            userDefaults.set(newValue?.rawValue, forKey: Key.selectedFilter.rawValue)
         }
     }
     
     func saveStatistics(bestStreak: Int, perfectDays: Int, totalCompleted: Int, averageCompleted: Int) {
-        userDefaults.set(bestStreak, forKey: Keys.bestStreak)
-        userDefaults.set(perfectDays, forKey: Keys.perfectDays)
-        userDefaults.set(totalCompleted, forKey: Keys.totalCompleted)
-        userDefaults.set(averageCompleted, forKey: Keys.averageCompleted)
+        userDefaults.set(bestStreak, forKey: Key.bestStreak.rawValue)
+        userDefaults.set(perfectDays, forKey: Key.perfectDays.rawValue)
+        userDefaults.set(totalCompleted, forKey: Key.totalCompleted.rawValue)
+        userDefaults.set(averageCompleted, forKey: Key.averageCompleted.rawValue)
     }
     
     func loadStatistics() -> (bestStreak: Int, perfectDays: Int, totalCompleted: Int, averageCompleted: Int) {
-        let bestStreak = userDefaults.integer(forKey: Keys.bestStreak)
-        let perfectDays = userDefaults.integer(forKey: Keys.perfectDays)
-        let totalCompleted = userDefaults.integer(forKey: Keys.totalCompleted)
-        let averageCompleted = userDefaults.integer(forKey: Keys.averageCompleted)
+        let bestStreak = userDefaults.integer(forKey: Key.bestStreak.rawValue)
+        let perfectDays = userDefaults.integer(forKey: Key.perfectDays.rawValue)
+        let totalCompleted = userDefaults.integer(forKey: Key.totalCompleted.rawValue)
+        let averageCompleted = userDefaults.integer(forKey: Key.averageCompleted.rawValue)
         return (bestStreak, perfectDays, totalCompleted, averageCompleted)
     }
 }

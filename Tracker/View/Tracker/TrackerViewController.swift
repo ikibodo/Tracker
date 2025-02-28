@@ -8,7 +8,7 @@ import UIKit
 
 final class TrackersViewController: UIViewController {
     
-    private var appSettingsStore = AppSettingsStore()
+    private var appSettingsStore = AppSettingsStore.shared
     private var currentFilter: TrackerFilterType = .allTrackers
     private var showOnlyCompleted: Bool? = nil
     
@@ -424,10 +424,16 @@ extension TrackersViewController: UICollectionViewDelegate, UICollectionViewData
     private func loadMoreData() {
         startLoading()
         DispatchQueue.global().async {
-            sleep(1)
-            DispatchQueue.main.async {
-                self.collectionView.reloadData()
-                self.stopLoading()
+//            sleep(1)
+//            DispatchQueue.main.async {
+//                self.collectionView.reloadData()
+//                self.stopLoading()
+//            }
+            DispatchQueue.global().asyncAfter(deadline: .now() + 1) {
+                DispatchQueue.main.async {
+                    self.collectionView.reloadData()
+                    self.stopLoading()
+                }
             }
         }
     }
